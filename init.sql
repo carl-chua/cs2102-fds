@@ -188,7 +188,7 @@ CREATE TABLE DeliveryServicePromotionalCampaigns (
 
 CREATE TABLE Orders (
 	orderId integer,
-	foodSubTotal numeric(10, 2) not null check foodSubTotal >= 0),
+	foodSubTotal numeric(10, 2) not null check (foodSubTotal >= 0),
 	deliveryFee numeric(10, 2) not null check (deliveryFee >= 0),
 	promoDiscount numeric(10, 2) not null check (promoDiscount >= 0),
 	promoCode varchar,
