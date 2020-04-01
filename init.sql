@@ -25,7 +25,7 @@ CREATE TABLE PromotionalCampaigns (
 	dollarDiscount numeric(10, 2) check (dollarDiscount >= 0),
 	isFreeDelivery boolean not null,
 	minSpend numeric(10, 2) check (minSpend >= 0),
-	onlyApplicableToFirstOrder boolean not null,
+	isOnlyForFirstOrders boolean not null,
 	maxDaysSinceLastOrder integer check (maxDaysSinceLastOrder >= 0),
 	minDaysSinceLastOrder integer check (minDaysSinceLastOrder >= 0),
 	primary key (promoCode)
@@ -46,7 +46,7 @@ CREATE TABLE FoodDeliveryServiceManagers (
 
 CREATE TABLE Locations (
     address varchar not null,
-    areaName integer not null,
+    areaName varchar not null,
     primary key (address)
     -- bcnf
     -- address -> areaName; address is a primary key
@@ -69,7 +69,7 @@ CREATE TABLE Customers (
     password varchar not null,
     email varchar unique not null,
 	phoneNo varchar not null,
-	registeredDate timestamp not null,
+	dateRegistered timestamp not null,
 	rewardPoints integer not null check (rewardPoints >=0),
 	registeredCardNo varchar,
     isActive boolean not null,
@@ -155,8 +155,9 @@ CREATE TABLE FoodMenuItems (
 
 CREATE TABLE FoodReviews (
     reviewId integer,
-    rating integer  not null check ((rating > 0) and (rating <= 5)),
-    description varchar,
+    starRating integer not null check ((starRating >= 1) and (starRating <= 5)),
+    reviewText varchar,
+    reviewDate timestamp not null,
     itemId integer not null,
     customerId integer not null,
     foreign key (itemId) references FoodMenuItems(itemId),
@@ -174,6 +175,8 @@ CREATE TABLE RestaurantPromotionalCampaigns (
 
 CREATE TABLE FoodItemPromotionalCampaigns (
 	itemId integer not null,
+    restaurantStaffId integer not null,
+	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId),
 	foreign key (itemId) references FoodMenuItems(itemId)
     -- no FDs
 ) INHERITS (PromotionalCampaigns);
@@ -181,14 +184,11 @@ CREATE TABLE FoodItemPromotionalCampaigns (
 CREATE TABLE DeliveryServicePromotionalCampaigns (
 	FDSManagerId integer not null,
     foreign key (FDSManagerId) references FoodDeliveryServiceManagers (FDSManagerId)
-    --should we include association with FoodDeliveryServiceManagers??
-	--if we were to include association with FDSM, we have to include
-	--association of RestaurantStaffs with RPC and include the creation of PromoCampaign use case in restaurant staff and manager system
 ) INHERITS (PromotionalCampaigns);
 
 CREATE TABLE Orders (
 	orderId integer,
-	subTotal numeric(10, 2) not null check (subTotal >= 0),
+	FoodSubTotal numeric(10, 2) not null check (FoodSubTotal >= 0),
 	deliveryFee numeric(10, 2) not null check (deliveryFee >= 0),
 	promoDiscount numeric(10, 2) not null check (promoDiscount >= 0),
 	promoCode varchar,
@@ -197,7 +197,7 @@ CREATE TABLE Orders (
 	timeRiderArrivesRestaurant timestamp check (timeRiderArrivesRestaurant >= timeRiderAccepts),
 	timeRiderLeavesRestaurant timestamp check (timeRiderLeavesRestaurant >= timeRiderArrivesRestaurant),
 	timeRiderDelivered timestamp check (timeRiderDelivered >= timeRiderLeavesRestaurant),
-	deliveryRating integer check ((deliveryRating) > 0 and (deliveryRating <=5)),
+	deliveryRating integer check ((deliveryRating) >= 1 and (deliveryRating <=5)),
 	paymentType varchar not null,
 	hasPaid boolean not null,
 	riderId integer not null,
