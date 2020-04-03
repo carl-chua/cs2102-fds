@@ -16,6 +16,27 @@ DROP TABLE IF EXISTS Schedules CASCADE;
 DROP TABLE IF EXISTS Shifts CASCADE;
 DROP TABLE IF EXISTS FoodDeliveryServiceManagers CASCADE;
 DROP TABLE IF EXISTS PromotionalCampaigns CASCADE;
+DROP TYPE IF EXISTS orderStatusEnum CASCADE;
+DROP TYPE IF EXISTS foodCategoryEnum CASCADE;
+
+CREATE TYPE orderStatusEnum as ENUM (
+    'CART',
+    'PENDING',
+    'PREPARING',
+    'READY FOR DELIVERY',
+    'DELIVERING',
+    'DELIVERED'
+);
+
+CREATE TYPE foodCategoryEnum as ENUM (
+    'Local',
+    'Western',
+    'Japanese',
+    'Indian',
+    'Chinese',
+    'Exotic',
+    'Others'
+);
 
 CREATE TABLE PromotionalCampaigns (
 	promoCode varchar,
@@ -28,6 +49,7 @@ CREATE TABLE PromotionalCampaigns (
 	isOnlyForFirstOrders boolean not null,
 	maxDaysSinceLastOrder integer check (maxDaysSinceLastOrder >= 0),
 	minDaysSinceLastOrder integer check (minDaysSinceLastOrder >= 0),
+    isActive boolean not null,
 	primary key (promoCode)
     -- bcnf
     -- promoCode -> every other attribute
@@ -38,7 +60,7 @@ CREATE TABLE FoodDeliveryServiceManagers (
     name varchar not null,
     email varchar unique not null,
     password varchar not null,
-    isActive boolean not null,
+    isDeleted boolean not null,
     primary key (FDSManagerId)
     -- bcnf
     -- FDSManagerId -> *
@@ -57,7 +79,7 @@ CREATE TABLE RestaurantStaffs (
     name varchar not null,
     password varchar not null,
     email varchar unique not null,
-    isActive boolean not null,
+    isDeleted boolean not null,
     primary key (restaurantStaffId)
     -- bcnf
     -- restaurantStaffId -> *
@@ -72,7 +94,7 @@ CREATE TABLE Customers (
 	dateRegistered timestamp not null,
 	rewardPoints integer not null check (rewardPoints >=0),
 	registeredCardNo varchar,
-    isActive boolean not null,
+    isDeleted boolean not null,
 	primary key (customerId)
     -- bcnf
     -- customerId -> *
@@ -84,7 +106,7 @@ CREATE TABLE DeliveryRiders (
     password varchar not null,
 	phoneNo varchar not null,
     email varchar unique not null,
-    isActive boolean not null,
+    isDeleted boolean not null,
     isAvailable boolean not null,
     overallRating numeric(3, 2) not null check ((overallRating >= 1) and (overallRating <= 5)),
 	primary key (riderId)
@@ -128,7 +150,8 @@ CREATE TABLE Shifts (
 );
 
 CREATE TABLE Restaurants (
-    restaurantId integer,
+    restaurantId integer, 
+    name varchar not null,
     minSpend numeric(10, 2) check (minSpend >= 0),
     address varchar not null,
     foreign key (address) references Locations(address),
@@ -142,29 +165,16 @@ CREATE TABLE FoodMenuItems (
 	itemId integer,
 	dailyLimit integer check (dailyLimit >= 0),
     price numeric(10, 2) not null check (price >= 0), 
-	category varchar not null,
+	category foodCategoryEnum not null,
 	qtyOrderedToday integer not null check (qtyOrderedToday >= 0),
 	isSelling boolean not null,
 	isAvailableToday boolean not null,
 	restaurantId integer not null,
+    rating integer check ((rating) >= 1 and (rating <=5)),
     foreign key(restaurantId) references Restaurants(restaurantId),
 	primary key(itemId)
 	-- bcnf
 	-- itemId -> restaurantId, and itemId is a primary key
-);
-
-CREATE TABLE FoodReviews (
-    reviewId integer,
-    starRating integer not null check ((starRating >= 1) and (starRating <= 5)),
-    reviewText varchar,
-    reviewDate timestamp not null,
-    itemId integer not null,
-    customerId integer not null,
-    foreign key (itemId) references FoodMenuItems(itemId),
-    foreign key (customerId) references Customers(customerId),
-    primary key(reviewId)
-    -- bcnf
-    -- reviewId -> *
 );
 
 CREATE TABLE RestaurantPromotionalCampaigns (
@@ -219,4 +229,19 @@ CREATE TABLE Picks (
 	foreign key (itemId) references FoodMenuItems(itemId),
 	primary key (orderId, itemId)
     -- no FDs
+);
+
+CREATE TABLE FoodReviews (
+    reviewId integer,
+    starRating integer not null check ((starRating >= 1) and (starRating <= 5)),
+    reviewText varchar,
+    reviewDate timestamp not null,
+    orderId integer not null,
+    itemId integer not null,
+    customerId integer not null,
+    foreign key (orderId, itemId) references Picks(orderId, itemId),
+    foreign key (customerId) references Customers(customerId),
+    primary key(reviewId)
+    -- bcnf
+    -- reviewId -> *
 );
