@@ -315,6 +315,44 @@ CREATE TABLE FoodReviews (
 -- 1. Every hour must have at least 5 riders working. 
 --      how to enforce? feed back to FDS Manager's UI?
 
+--- ***Insert Triggers here***
+--- 4 categories
+
+--- 1. Pre-procesing triggers
+/*
+
+CREATE OR REPLACE FUNCTION auditlogfunc() RETURNS TRIGGER AS $$
+   BEGIN
+      INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VALUES (new.ID, current_timestamp);
+      RETURN NEW;
+   END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS t r im_spaces_t r igger ON Re g i s t r a t i o n s ;
+
+CREATE TRIGGER t r im_spaces_t r igger
+BEFORE UPDATE OF company OR INSERT
+ON Re g i s t r a t i o n s
+FOR EACH ROW
+EXECUTE FUNCTION t r im_spaces ( ) ;
+
+*/
+
+--- 2. Enforcing constraints
+/*
+
+*/
+
+--- 3. Maintaining other database information upon changes
+/*
+
+*/
+
+--- 4. Sending Notifications
+/*
+
+*/
+
 INSERT INTO FoodDeliveryServiceManagers
 values 
 (1, 'manager001', 'manager001@gmail.com', 'manager001Password', false),
