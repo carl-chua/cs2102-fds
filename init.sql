@@ -124,6 +124,8 @@ CREATE TABLE DeliveryRiders (
 	primary key (riderId)
     -- bcnf
     -- riderId -> *
+
+    -- if isDeleted is true, isAvailable should be turned to false
 );
 
 CREATE TABLE Shifts (
@@ -139,7 +141,7 @@ CREATE TABLE Schedules (
     riderId integer not null,
 	startDate timestamp not null,
 	endDate timestamp not null check (endDate >= startDate),
-    datePaid timestamp not null check (datePaid >= endDate),
+    datePaid timestamp check (datePaid >= endDate),
 	feePerDelivery numeric(10, 2) not null check (feePerDelivery >= 0),
 	noOfDeliveries integer not null check (noOfDeliveries >= 0),
 	baseSalary integer not null check (baseSalary >= 0),
@@ -149,6 +151,8 @@ CREATE TABLE Schedules (
     -- scheduleId -> *
 
     -- for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
+        -- if clash, raise exception: schedule already exists for this time period
+    -- increment noOfDeliveries by 1 when Order with same riderId is completed
 );
 
 CREATE TABLE MonthlyWorkSchedules (
@@ -170,7 +174,7 @@ CREATE TABLE MonthlyWorkSchedules (
     -- scheduleId -> *
 
     -- start date end date should have exactly 4 weeks difference
-    -- insert into schedules table for every insertion into this table
+    -- insert into Schedules table for every insertion into this table
 ) INHERITS (Schedules);
 
 CREATE TABLE WeeklyWorkSchedules (
@@ -179,7 +183,7 @@ CREATE TABLE WeeklyWorkSchedules (
     -- scheduleId -> *
     
     -- start date end date should have exactly 1 week difference
-    -- insert into schedules table for every insertion into this table
+    -- insert into Schedules table for every insertion into this table
 ) INHERITS (Schedules);
 
 CREATE TABLE Restaurants (
