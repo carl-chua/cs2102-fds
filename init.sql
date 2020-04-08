@@ -147,6 +147,8 @@ CREATE TABLE Schedules (
 	primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
+
+    -- for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
 );
 
 CREATE TABLE MonthlyWorkSchedules (
