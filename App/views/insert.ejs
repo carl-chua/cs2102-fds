@@ -17,7 +17,11 @@
 		<script src="javascripts/insertScript.js"></script>
   </head>
   <body>
-    <h1>CS2102: <%= title%></h1>
+	<h1>CS2102: <%= title%></h1>
+		<!--
+			action: the JS file to send data to
+			method: post
+		-->
 		<form id="html_form" action="insert" role="form" method="post">
 			<div class="form-group">
 				<label for="matric">Matric Number</label>
@@ -40,6 +44,7 @@
 				window.addEventListener('load', function() {
 					var forms = [document.getElementById('html_form')];
 					var validation = Array.prototype.filter.call(forms, function(form) {
+						// the check function comes from insertScript.js
 						form.addEventListener('submit', check, false);
 					});
 				}, false);

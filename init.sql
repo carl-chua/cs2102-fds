@@ -132,6 +132,8 @@ CREATE TABLE DeliveryRiders (
 	primary key (riderId)
     -- bcnf
     -- riderId -> *
+
+    -- if isDeleted is true, isAvailable should be turned to false
 );
 
 CREATE TABLE Shifts (
@@ -147,7 +149,7 @@ CREATE TABLE Schedules (
     riderId integer not null,
 	startDate timestamp not null,
 	endDate timestamp not null check (endDate >= startDate),
-    datePaid timestamp not null check (datePaid >= endDate),
+    datePaid timestamp check (datePaid >= endDate),
 	feePerDelivery numeric(10, 2) not null check (feePerDelivery >= 0),
 	noOfDeliveries integer not null check (noOfDeliveries >= 0),
 	baseSalary integer not null check (baseSalary >= 0),
@@ -158,6 +160,9 @@ CREATE TABLE Schedules (
 
     -- every insertion into this table needs to be accompanied by an insertion into
     -- monthly or weekly schedules table
+    -- for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
+        -- if clash, raise exception: schedule already exists for this time period
+    -- increment noOfDeliveries by 1 when Order with same riderId is completed
 );
 
 CREATE TABLE MonthlyWorkSchedules (
@@ -182,8 +187,8 @@ CREATE TABLE MonthlyWorkSchedules (
     -- scheduleId -> *
 
     -- start date end date should have exactly 4 weeks difference
-    -- insert into schedules table for every insertion into this table
-);
+    -- insert into Schedules table for every insertion into this table
+) INHERITS (Schedules);
 
 CREATE TABLE WeeklyWorkSchedules (
     scheduleId integer,
@@ -194,8 +199,8 @@ CREATE TABLE WeeklyWorkSchedules (
     -- scheduleId -> *
     
     -- start date end date should have exactly 1 week difference
-    -- insert into schedules table for every insertion into this table
-);
+    -- insert into Schedules table for every insertion into this table
+) INHERITS (Schedules);
 
 CREATE TABLE Restaurants (
     restaurantId integer, 
@@ -342,6 +347,44 @@ CREATE TABLE FoodReviews (
 -- additional triggers:
 -- 1. Every hour must have at least 5 riders working. 
 --      how to enforce? feed back to FDS Manager's UI?
+
+--- ***Insert Triggers here***
+--- 4 categories
+
+--- 1. Pre-procesing triggers
+/*
+
+CREATE OR REPLACE FUNCTION auditlogfunc() RETURNS TRIGGER AS $$
+   BEGIN
+      INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VALUES (new.ID, current_timestamp);
+      RETURN NEW;
+   END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS t r im_spaces_t r igger ON Re g i s t r a t i o n s ;
+
+CREATE TRIGGER t r im_spaces_t r igger
+BEFORE UPDATE OF company OR INSERT
+ON Re g i s t r a t i o n s
+FOR EACH ROW
+EXECUTE FUNCTION t r im_spaces ( ) ;
+
+*/
+
+--- 2. Enforcing constraints
+/*
+
+*/
+
+--- 3. Maintaining other database information upon changes
+/*
+
+*/
+
+--- 4. Sending Notifications
+/*
+
+*/
 
 INSERT INTO FoodDeliveryServiceManagers
 values 
