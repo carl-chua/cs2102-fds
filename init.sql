@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS FoodDeliveryServiceManagers CASCADE;
 DROP TABLE IF EXISTS PromotionalCampaigns CASCADE;
 DROP TABLE IF EXISTS Locations CASCADE;
 DROP TYPE IF EXISTS promoTypeEnum CASCADE;
+DROP TYPE IF EXISTS discountTypeEnum CASCADE;
 DROP TYPE IF EXISTS promoApplicableForEnum CASCADE;
 DROP TYPE IF EXISTS orderStatusEnum CASCADE;
 DROP TYPE IF EXISTS foodCategoryEnum CASCADE;
@@ -40,10 +41,16 @@ CREATE TYPE foodCategoryEnum as ENUM (
     'Others'
 );
 
-CREATE TYPE promoTypeEnum as ENUM (
+CREATE TYPE discountTypeEnum as ENUM (
     'PERCENT',
     'DOLLAR',
     'FREE-DELIVERY'
+);
+
+CREATE TYPE promoTypeEnum as ENUM (
+    'FDPC',
+    'RPC',
+    'FIPC'
 );
 
 CREATE TYPE promoApplicableForEnum as ENUM (
@@ -58,6 +65,7 @@ CREATE TABLE PromotionalCampaigns (
 	startDateTime timestamp not null,
 	endDateTime timestamp not null check (endDateTime > startDateTime),
 	promoType promoTypeEnum not null,
+    discountType discountTypeEnum not null,
     discount numeric(10, 2) check (Discount >= 0),
 	minSpend numeric(10, 2) check (minSpend >= 0),
 	promoApplicableFor promoApplicableForEnum not null,
@@ -147,9 +155,13 @@ CREATE TABLE Schedules (
 	primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
+
+    -- every insertion into this table needs to be accompanied by an insertion into
+    -- monthly or weekly schedules table
 );
 
 CREATE TABLE MonthlyWorkSchedules (
+    scheduleId integer,
 	monShift integer,
     tueShift integer,
     wedShift integer,
@@ -163,22 +175,27 @@ CREATE TABLE MonthlyWorkSchedules (
     foreign key (thuShift) references Shifts (shiftId),
     foreign key (friShift) references Shifts (shiftId),
     foreign key (satShift) references Shifts (shiftId),
-    foreign key (sunShift) references Shifts (shiftId)
+    foreign key (sunShift) references Shifts (shiftId),
+    foreign key (scheduleId) references Schedules (scheduleId),
+    primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
 
     -- start date end date should have exactly 4 weeks difference
     -- insert into schedules table for every insertion into this table
-) INHERITS (Schedules);
+);
 
 CREATE TABLE WeeklyWorkSchedules (
-	hourlySchedule boolean[7][12] not null
+    scheduleId integer,
+	hourlySchedule boolean[7][12] not null,
+    foreign key (scheduleId) references Schedules (scheduleId),
+    primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
     
     -- start date end date should have exactly 1 week difference
     -- insert into schedules table for every insertion into this table
-) INHERITS (Schedules);
+);
 
 CREATE TABLE Restaurants (
     restaurantId integer, 
@@ -223,29 +240,40 @@ CREATE TABLE FoodMenuItems (
 );
 
 CREATE TABLE RestaurantPromotionalCampaigns (
+    promoCode varchar,
 	restaurantStaffId integer not null,
-	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId)
+	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId),
+    foreign key (promoCode) references PromotionalCampaigns (promoCode),
+    primary key (promoCode)
     -- no FDs
 
     -- insert into PromotionalCampaigns table for every insertion into this table
-) INHERITS (PromotionalCampaigns);
+    -- ensure promoTypeEnum is selected correctly
+);
 
 CREATE TABLE FoodItemPromotionalCampaigns (
+    promoCode varchar,
     restaurantStaffId integer not null,
 	itemId integer not null,
 	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId),
-	foreign key (itemId) references FoodMenuItems(itemId)
+	foreign key (itemId) references FoodMenuItems(itemId),
+    foreign key (promoCode) references PromotionalCampaigns (promoCode),
+    primary key (promoCode)
     -- no FDs
     
     -- insert into PromotionalCampaigns table for every insertion into this table
-) INHERITS (PromotionalCampaigns);
+    -- ensure promoTypeEnum is selected correctly
+);
 
 CREATE TABLE DeliveryServicePromotionalCampaigns (
-	FDSManagerId integer not null,
-    foreign key (FDSManagerId) references FoodDeliveryServiceManagers (FDSManagerId)
-
+	promoCode varchar,
+    FDSManagerId integer not null,
+    foreign key (FDSManagerId) references FoodDeliveryServiceManagers (FDSManagerId),
+    foreign key (promoCode) references PromotionalCampaigns (promoCode),
+    primary key (promoCode)
     -- insert into PromotionalCampaigns table for every insertion into this table
-) INHERITS (PromotionalCampaigns);
+    -- ensure promoTypeEnum is selected correctly
+);
 
 CREATE TABLE Orders (
 	orderId integer,
@@ -323,25 +351,23 @@ values
 (4, 'manager004', 'manager004@gmail.com', 'manager004Password', true),
 (5, 'manager005', 'manager005@gmail.com', 'manager005Password', false);
 
+INSERT INTO PromotionalCampaigns
+values
+('20%OFF-FORALL', '2020-04-04', '2020-04-24', 'FDPC', 'PERCENT', 20.00, 10.00, 'ALL-CUSTOMERS', NULL, true),
+('$5OFF-FORFIRSTORDER', '2020-04-02', '2020-04-22', 'FDPC', 'DOLLAR', 5, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, true),
+('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', '2020-04-05', '2020-04-25', 'FDPC', 'FREE-DELIVERY', NULL, NULL, 'MIN-DAYS-SINCE-LAST-ORDER', 30, true),
+('10%OFF-HAVEORDEREDINLAST5DAYS', '2020-04-07', '2020-04-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, true),
+('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', '2020-03-07', '2020-03-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, false),
+('$10FF-FORFIRSTORDER-EXPIRED', '2020-03-07', '2020-03-27', 'FDPC', 'DOLLAR', 10.00, NULL, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, false);
+
 INSERT INTO DeliveryServicePromotionalCampaigns
 values
-('20%OFF-FORALL', '2020-04-04', '2020-04-24', 'PERCENT', 20.00, 10.00, 'ALL-CUSTOMERS', NULL, true, 1),
-('$5OFF-FORFIRSTORDER', '2020-04-02', '2020-04-22', 'DOLLAR', 5, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, true, 2),
-('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', '2020-04-05', '2020-04-25', 'FREE-DELIVERY', NULL, NULL, 'MIN-DAYS-SINCE-LAST-ORDER', 30, true, 3),
-('10%OFF-HAVEORDEREDINLAST5DAYS', '2020-04-07', '2020-04-27', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, true, 4),
-('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', '2020-03-07', '2020-03-27', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, false, 5),
-('$10FF-FORFIRSTORDER-EXPIRED', '2020-03-07', '2020-03-27', 'DOLLAR', 10.00, NULL, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, false, 5);
-
-INSERT INTO PromotionalCampaigns
-
-values
-('20%OFF-FORALL', '2020-04-04', '2020-04-24', 'PERCENT', 20.00, 10.00, 'ALL-CUSTOMERS', NULL, true),
-('$5OFF-FORFIRSTORDER', '2020-04-02', '2020-04-22', 'DOLLAR', 5, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, true),
-('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', '2020-04-05', '2020-04-25', 'FREE-DELIVERY', NULL, NULL, 'MIN-DAYS-SINCE-LAST-ORDER', 30, true),
-('10%OFF-HAVEORDEREDINLAST5DAYS', '2020-04-07', '2020-04-27', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, true),
-('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', '2020-03-07', '2020-03-27', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, false),
-('$10FF-FORFIRSTORDER-EXPIRED', '2020-03-07', '2020-03-27', 'DOLLAR', 10.00, NULL, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, false);
-
+('20%OFF-FORALL', 1),
+('$5OFF-FORFIRSTORDER', 2),
+('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', 3),
+('10%OFF-HAVEORDEREDINLAST5DAYS', 4),
+('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', 5),
+('$10FF-FORFIRSTORDER-EXPIRED', 5);
 
 INSERT INTO DeliveryRiders 
 values
@@ -363,20 +389,35 @@ values
 (3, '{false,false,true,true,true,true,false,true,true,true,true,false}'),
 (4, '{false,false,false,true,true,true,true,false,true,true,true,true}');
 
+INSERT INTO Schedules
+values
+(1,1,'2020-04-05','2020-05-03','2020-05-04',2,532,1500),
+(2,2,'2020-04-10','2020-05-08','2020-05-10',2,467,1500),
+(3,3,'2020-04-07','2020-05-05','2020-05-06',2,486,1500),
+(4,4,'2020-04-09','2020-05-07','2020-05-08',2,521,1500),
+(5,5,'2020-04-03','2020-05-01','2020-05-03',2,509,1500),
+(6,6,'2020-04-03','2020-05-01','2020-05-03',2,503,1500),
+(7,7,'2020-04-04','2020-05-02','2020-05-04',2,498,1500);
+
 INSERT INTO MonthlyWorkSchedules
 values
-(1,1,'2020-04-05','2020-05-03','2020-05-04',2,532,1500,4,4,2,1,2,null,null),
-(2,2,'2020-04-10','2020-05-08','2020-05-10',2,467,1500,null,1,4,2,3,2,null),
-(3,3,'2020-04-07','2020-05-05','2020-05-06',2,486,1500,null,null,3,4,2,3,1),
-(4,4,'2020-04-09','2020-05-07','2020-05-08',2,521,1500,2,null,null,4,2,1,3),
-(5,5,'2020-04-03','2020-05-01','2020-05-03',2,509,1500,3,2,null,null,1,2,2),
-(6,6,'2020-04-03','2020-05-01','2020-05-03',2,503,1500,1,3,2,null,null,2,2),
-(7,7,'2020-04-04','2020-05-02','2020-05-04',2,498,1500,4,4,2,1,null,null,2);
+(1,4,4,2,1,2,null,null),
+(2,null,1,4,2,3,2,null),
+(3,null,null,3,4,2,3,1),
+(4,2,null,null,4,2,1,3),
+(5,3,2,null,null,1,2,2),
+(6,1,3,2,null,null,2,2),
+(7,4,4,2,1,null,null,2);
 
+INSERT INTO Schedules
+values
+(8, 8, '2020-04-05', '2020-04-12', '2020-04-14', 2, 145, 1500),
+(9, 9, '2020-04-06', '2020-04-13', '2020-04-15', 2, 150, 1500),
+(10, 10, '2020-04-03', '2020-04-10', '2020-04-12', 2, 143, 1500);
 
 INSERT INTO WeeklyWorkSchedules
 values
-(8, 8, '2020-04-05', '2020-04-12', '2020-04-14', 2, 145, 1500,
+(8,
     '{{true, true, true, false, true, false, false, false, false, true, true, false}, 
     {false, false, false, false, true, true, true, true, false, false, false, false}, 
     {true, true, false, false, false, false, true, true, true, true, false, false}, 
@@ -384,7 +425,7 @@ values
     {false, true, true, true, false, false, false, false, true, true, true, true}, 
     {true, true, true, false, false, false, false, false, false, false, false, false}, 
     {false, false, false, false, false, false, false, false, false, false, false, false}}'),
-(9, 9, '2020-04-06', '2020-04-13', '2020-04-15', 2, 150, 1500,
+(9,
     '{{false, true, true, false, true, false, false, false, false, true, true, false}, 
     {false, false, false, false, true, true, true, true, false, false, false, false}, 
     {true, true, false, false, false, false, true, true, true, true, false, false}, 
@@ -392,7 +433,7 @@ values
     {false, false, true, true, false, false, false, false, true, true, true, true}, 
     {true, true, false, false, false, false, false, false, false, false, false, false}, 
     {false, false, false, true, true, false, false, false, false, false, false, false}}'),
-(10, 10, '2020-04-03', '2020-04-10', '2020-04-12', 2, 143, 1500,
+(10,
     '{{true, true, false, false, true, false, false, false, false, true, true, false}, 
     {false, false, false, false, true, true, true, true, false, false, false, false}, 
     {true, true, false, false, false, false, false, true, true, true, false, false}, 
@@ -400,7 +441,6 @@ values
     {false, true, true, true, false, false, false, false, true, true, true, true}, 
     {true, true, false, false, false, false, false, false, false, false, false, false}, 
     {false, false, false, false, false, false, true, true, false, false, false, false}}');
-
 
 INSERT INTO Locations values 
 ('restaurant001add001area001', 'area001'),
@@ -464,45 +504,37 @@ INSERT INTO RestaurantStaffs values
 (9, 'rstaff001r005', 'password', 'rstaff001@r005.com', false, 5),
 (10, 'rstaff002r005', 'password', 'rstaff002@r005.com', false, 5);
 
-INSERT INTO RestaurantPromotionalCampaigns values
-('R001-50PERCENTOFF-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-    'PERCENT', 50, 5.00, 'ALL-CUSTOMERS', null, true, 1),
-('R002-FREEDELIVERY-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-    'FREE-DELIVERY', 50, 10.00, 'ALL-CUSTOMERS', null, true, 4),
-('R003-2DOLLAROFF-FIRSTACCOUNT', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-    'DOLLAR', 2.00, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', null, true, 5),
-('R001-FREEDELIVERY-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-    'FREE-DELIVERY', 50, 10.00, 'ALL-CUSTOMERS', null, false, 4);
-
 INSERT INTO PromotionalCampaigns values
-('R001-50PERCENTOFF-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R001-50PERCENTOFF-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'RPC', 
     'PERCENT', 50, 5.00, 'ALL-CUSTOMERS', null, true),
-('R002-FREEDELIVERY-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R002-FREEDELIVERY-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'RPC', 
     'FREE-DELIVERY', 50, 10.00, 'ALL-CUSTOMERS', null, true),
-('R003-2DOLLAROFF-FIRSTACCOUNT', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R003-2DOLLAROFF-FIRSTACCOUNT', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'RPC', 
     'DOLLAR', 2.00, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', null, true),
-('R001-FREEDELIVERY-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R001-FREEDELIVERY-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'RPC', 
     'FREE-DELIVERY', 50, 10.00, 'ALL-CUSTOMERS', null, false);
 
-INSERT INTO FoodItemPromotionalCampaigns values
-('R004-30PERCENTOFF-ITEM004-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-	'PERCENT', 30, 0, 'ALL-CUSTOMERS', null, true, 8, 19),
-('R004-0.5DOLLAROFF-ITEM003-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-	'DOLLAR', 0.5, 0, 'ALL-CUSTOMERS', null, true, 8, 18),
-('R002-FREEDELIVERY-3MAXDAYS-ITEM002', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-	'FREE-DELIVERY', null, 0, 'MAX-DAYS-SINCE-LAST-ORDER', 3, true, 3, 7),
-('R004-100PERCENTOFF-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
-	'PERCENT', 100, 0, 'ALL-CUSTOMERS', null, false, 8, 19);
+INSERT INTO RestaurantPromotionalCampaigns values
+('R001-50PERCENTOFF-ALL', 1),
+('R002-FREEDELIVERY-ALL', 4),
+('R003-2DOLLAROFF-FIRSTACCOUNT', 5),
+('R001-FREEDELIVERY-INACTIVE', 4);
 
 INSERT INTO PromotionalCampaigns values
-('R004-30PERCENTOFF-ITEM004-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R004-30PERCENTOFF-ITEM004-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'FIPC', 
 	'PERCENT', 30, 0, 'ALL-CUSTOMERS', null, true),
-('R004-0.5DOLLAROFF-ITEM003-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R004-0.5DOLLAROFF-ITEM003-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'FIPC', 
 	'DOLLAR', 0.5, 0, 'ALL-CUSTOMERS', null, true),
-('R002-FREEDELIVERY-3MAXDAYS-ITEM002', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R002-FREEDELIVERY-3MAXDAYS-ITEM002', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'FIPC', 
 	'FREE-DELIVERY', null, 0, 'MAX-DAYS-SINCE-LAST-ORDER', 3, true),
-('R004-100PERCENTOFF-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 
+('R004-100PERCENTOFF-INACTIVE', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'FIPC', 
 	'PERCENT', 100, 0, 'ALL-CUSTOMERS', null, false);
+
+INSERT INTO FoodItemPromotionalCampaigns values
+('R004-30PERCENTOFF-ITEM004-ALL', 8, 19),
+('R004-0.5DOLLAROFF-ITEM003-ALL', 8, 18),
+('R002-FREEDELIVERY-3MAXDAYS-ITEM002', 3, 7),
+('R004-100PERCENTOFF-INACTIVE', 8, 19);
 
 INSERT INTO Customers values 
 (1, 'customer001', 'password', 'customer001@gmail.com', '80000001', 
