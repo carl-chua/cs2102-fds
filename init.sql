@@ -76,6 +76,9 @@ CREATE TABLE PromotionalCampaigns (
     -- promoCode -> every other attribute
 );
 
+-- triggers:
+-- 1. If today's date is between the startDateTime and startDateTime, isActive needs to be automatically changed to true or false otherwise.
+
 CREATE TABLE FoodDeliveryServiceManagers (
     FDSManagerId integer,
     name varchar not null,
@@ -120,6 +123,10 @@ CREATE TABLE Customers (
     -- customerId -> *
 );
 
+-- addresses: on update cascade?
+-- triggers:
+-- 1. encrypt password/registeredCardNo upon insertion into database
+
 CREATE TABLE DeliveryRiders (
  	riderId integer,
     name varchar not null,
@@ -135,6 +142,13 @@ CREATE TABLE DeliveryRiders (
 
     -- if isDeleted is true, isAvailable should be turned to false
 );
+
+-- triggers:
+-- 1. If rider accepts an order, isAvailable needs to be set to false (enforcement)
+-- 2. If rider finishes an order, isAvailable needs to be set to true (enforcement)
+-- 3. If the currentTime is out of the schedule time, isAvailable needs to be set to false.
+-- 4. If rider is deleted, isDeleted must be set to true and isAvailable to false.
+-- 5. If a customer rates an order, the overall rating must be updated. (done using trigger)
 
 CREATE TABLE Shifts (
     shiftId integer,
@@ -164,6 +178,9 @@ CREATE TABLE Schedules (
         -- if clash, raise exception: schedule already exists for this time period
     -- increment noOfDeliveries by 1 when Order with same riderId is completed
 );
+
+-- triggers:
+-- 1. stated above
 
 CREATE TABLE MonthlyWorkSchedules (
     scheduleId integer,
@@ -214,6 +231,10 @@ CREATE TABLE Restaurants (
     -- restaurantId -> minSpend
 );
 
+-- address: on update cascade
+-- triggers:
+-- 1. When a customer confirms his order, need to check whether the order exceeds the minSpend.
+
 CREATE TABLE RestaurantStaffs (
     restaurantStaffId integer,
     name varchar not null,
@@ -244,6 +265,12 @@ CREATE TABLE FoodMenuItems (
 	-- itemId -> restaurantId, and itemId is a primary key
 );
 
+-- triggers:
+-- 1. When a customer confirms his order, qtyOrderedToday must be updated.
+-- 2. When a customer picks an item, qtyOrderedToday + qty must not exceed dailyLimit.
+-- 3. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false.
+-- 4. When a customer rates an order, the rating must be updated.
+
 CREATE TABLE RestaurantPromotionalCampaigns (
     promoCode varchar,
 	restaurantStaffId integer not null,
@@ -255,6 +282,7 @@ CREATE TABLE RestaurantPromotionalCampaigns (
     -- insert into PromotionalCampaigns table for every insertion into this table
     -- ensure promoTypeEnum is selected correctly
 );
+
 
 CREATE TABLE FoodItemPromotionalCampaigns (
     promoCode varchar,
@@ -316,6 +344,12 @@ CREATE TABLE Orders (
     -- when hasPaid = true, trigger customers reward points
     -- when order is placed, a new orderId needs to be generated and tagged to this customer
 );
+
+-- triggers:
+-- 1. stated above
+-- 2. hasPaid needs to be set to paid after rider delivers food. (only when payment mode is cash)
+-- 3. need to update promoDiscount value when promoCode is applied AND whenever a new item is added.
+-- 4. When customer confirms order, need to assign a rider to the order. (check driver's availability)
 
 CREATE TABLE Picks (
 	orderId integer,
