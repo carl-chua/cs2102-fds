@@ -188,7 +188,7 @@ CREATE TABLE MonthlyWorkSchedules (
 
     -- start date end date should have exactly 4 weeks difference
     -- insert into Schedules table for every insertion into this table
-) INHERITS (Schedules);
+);
 
 CREATE TABLE WeeklyWorkSchedules (
     scheduleId integer,
@@ -200,7 +200,7 @@ CREATE TABLE WeeklyWorkSchedules (
     
     -- start date end date should have exactly 1 week difference
     -- insert into Schedules table for every insertion into this table
-) INHERITS (Schedules);
+);
 
 CREATE TABLE Restaurants (
     restaurantId integer, 
@@ -305,7 +305,7 @@ CREATE TABLE Orders (
     primary key(orderId)
     -- no FDs
     
-    -- update foodSubTotal upon insertion into picks table
+    -- update foodSubTotal upon insertion into picks table *
     -- update promoDiscount using triggers upon placing order
     -- before/when adding timeplaced, check for non-null address, delivery fee, hasPaid (if paying by card)
     -- before adding rider, check timeplaced & order status
