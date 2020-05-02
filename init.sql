@@ -76,9 +76,18 @@ CREATE TABLE PromotionalCampaigns (
     -- promoCode -> every other attribute
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. If today's date is between the startDateTime and endDateTime, isActive needs to be automatically changed to true
 -- 2. Once today's date passes endDateTime, set isActive to false.
+
+-- final implementation:
+-- triggers based on time cannot be implemented. 
+-- isActive is now used only when manager chooses to disable PC within available period (not when it's expired)
+-- time-validity of promo campaign is instead checked upon addition into an Orders tuple, using a trigger.
+-- trigger checks:
+	-- 1. is campaign expired?
+	-- 2. if not, isActive = false?
+	-- if not, promo code is valid
 
 CREATE TABLE FoodDeliveryServiceManagers (
     FDSManagerId integer,
@@ -104,7 +113,7 @@ CREATE TABLE Customers (
 	name varchar not null,
     password varchar not null,
     email varchar unique not null,
-	phoneNo varchar not null,
+	phoneNo integer not null,
 	dateRegistered timestamp not null,
 	rewardPoints integer not null check (rewardPoints >=0),
 	registeredCardNo varchar,
@@ -124,11 +133,9 @@ CREATE TABLE Customers (
     -- customerId -> *
 );
 
--- addresses: on update cascade?
--- triggers:
+-- to enforce in front-end:
 -- 1. check that phone number is valid 8-digit number starting with 6, 8 or 9
 -- 2. check email string is valid
--- [ can also be enforced using JS ]
 
 CREATE TABLE DeliveryRiders (
  	riderId integer,
@@ -145,11 +152,17 @@ CREATE TABLE DeliveryRiders (
 
 );
 
--- triggers:
+-- initial trigger ideas:
+-- 1. If the current time is out of the schedule time, isAvailable needs to be set to false.
+-- 2. If rider is deleted, isDeleted must be set to true and isAvailable to false.
+-- 3. Every hour, check that at least 5 delivery riders are working. If not, raise error to FDS manager's UI.
 
--- 3. If the current time is out of the schedule time, isAvailable needs to be set to false.
--- 4. If rider is deleted, isDeleted must be set to true and isAvailable to false.
--- 6. Every hour, check that at least 5 delivery riders are working. If not, raise error to FDS manager's UI.
+-- final implementation:
+-- no way to schedule a time-based trigger in Postgres.
+-- 1 can instead be checked when querying for the rider (if currentTime.hour in rider's working hours)
+-- a trigger is written for 2
+-- 3 can be implemented by querying for all riders available in the current hour, and checking if that number > 5.
+-- isAvailable is thus superfluous
 
 CREATE TABLE Shifts (
     shiftId integer,
@@ -267,8 +280,8 @@ CREATE TABLE FoodMenuItems (
 );
 
 -- triggers:
--- 2. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false immediately.
--- 3. when isAvailableToday is false, hide item from menu.
+-- 1. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false immediately.
+-- 2. when isAvailableToday is false, hide item from menu.
 
 CREATE TABLE RestaurantPromotionalCampaigns (
     promoCode varchar,
@@ -369,6 +382,7 @@ CREATE TABLE Orders (
     -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
 -- 12. if the customer rates the order, the rider's rating must be updated accordingly.
 
+
 CREATE TABLE Picks (
 	orderId integer,
 	itemId integer,
@@ -401,9 +415,93 @@ CREATE TABLE FoodReviews (
 -- 1. ensure review can only be submitted for a completed order.
 -- 2. when a customer rates his food, the rating in FoodMenuItems must be updated.
 
+-- no way to activate triggers based on time, or upon query (SELECT)
+
 /**
  * Triggers
  */
+
+/* PromotionalCampaigns triggers */
+
+-- isActive checks: if selected promo code is still in date / disabled
+CREATE OR REPLACE FUNCTION valid_code_check() RETURNS TRIGGER AS $$
+DECLARE
+	endDateTime timestamp;
+	isActive boolean;
+BEGIN
+	SELECT PC.endDateTime, PC.isActive INTO endDateTime, isActive
+	FROM PromotionalCampaigns PC 
+	WHERE PC.promoCode = NEW.promoCode;
+
+	IF endDateTime < NOW()::timestamp THEN
+		-- cannot update isActive here as exception is raised.
+		RAISE exception 'This code is no longer valid.';
+	ELSIF isActive = FALSE THEN
+		RAISE exception 'This code is not currently available.';
+	ELSE
+		RETURN NEW;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS valid_code_trigger ON Orders;
+CREATE TRIGGER valid_code_trigger
+	BEFORE UPDATE OF promoCode ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION valid_code_check();
+
+/* DeliveryRiders triggers */
+
+-- if rider isDeleted, make isAvailable false
+CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE DeliveryRiders
+	SET isAvailable = FALSE
+	WHERE riderId = NEW.riderId;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
+CREATE TRIGGER not_available_when_deleted
+	AFTER UPDATE OF isDeleted ON DeliveryRiders
+	FOR EACH ROW
+	EXECUTE FUNCTION make_unavailable();
+
+/* Schedules triggers */
+
+-- Schedules triggers:
+-- 1. every insertion into this table needs to be accompanied by an insertion into monthly or weekly schedules table
+-- 2. for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
+        -- if clash, raise exception: schedule already exists for this time period
+-- 3. on retrieval of schedules, send a warning if the rider has not yet posted his schedule for the current work period
+
+-- for every insertion, check all other tuples with same riderId and ensure no tuples with same date
+CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE DeliveryRiders
+	SET isAvailable = FALSE
+	WHERE riderId = NEW.riderId;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
+CREATE TRIGGER not_available_when_deleted
+	AFTER UPDATE OF isDeleted ON DeliveryRiders
+	FOR EACH ROW
+	EXECUTE FUNCTION make_unavailable();
+
+-- MWS triggers:
+-- 1. ensure start date end date have exactly 4 weeks difference (27-31 days) in Schedules
+-- 2. insert into Schedules table for every insertion into this table
+
+-- WWS triggers:
+-- 1. start date end date should have exactly 1 week difference in Schedules
+-- 2. insert into Schedules table for every insertion into this table
+
+
+
 
 
 /**
