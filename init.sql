@@ -77,7 +77,8 @@ CREATE TABLE PromotionalCampaigns (
 );
 
 -- triggers:
--- 1. If today's date is between the startDateTime and startDateTime, isActive needs to be automatically changed to true or false otherwise.
+-- 1. If today's date is between the startDateTime and endDateTime, isActive needs to be automatically changed to true
+-- 2. Once today's date passes endDateTime, set isActive to false.
 
 CREATE TABLE FoodDeliveryServiceManagers (
     FDSManagerId integer,
@@ -125,7 +126,9 @@ CREATE TABLE Customers (
 
 -- addresses: on update cascade?
 -- triggers:
--- 1. encrypt password/registeredCardNo upon insertion into database
+-- 1. check that phone number is valid 8-digit number starting with 6, 8 or 9
+-- 2. check email string is valid
+-- [ can also be enforced using JS ]
 
 CREATE TABLE DeliveryRiders (
  	riderId integer,
@@ -140,15 +143,13 @@ CREATE TABLE DeliveryRiders (
     -- bcnf
     -- riderId -> *
 
-    -- if isDeleted is true, isAvailable should be turned to false
 );
 
 -- triggers:
--- 1. If rider accepts an order, isAvailable needs to be set to false (enforcement)
--- 2. If rider finishes an order, isAvailable needs to be set to true (enforcement)
--- 3. If the currentTime is out of the schedule time, isAvailable needs to be set to false.
+
+-- 3. If the current time is out of the schedule time, isAvailable needs to be set to false.
 -- 4. If rider is deleted, isDeleted must be set to true and isAvailable to false.
--- 5. If a customer rates an order, the overall rating must be updated. (done using trigger)
+-- 6. Every hour, check that at least 5 delivery riders are working. If not, raise error to FDS manager's UI.
 
 CREATE TABLE Shifts (
     shiftId integer,
@@ -171,16 +172,13 @@ CREATE TABLE Schedules (
 	primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
-
-    -- every insertion into this table needs to be accompanied by an insertion into
-    -- monthly or weekly schedules table
-    -- for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
-        -- if clash, raise exception: schedule already exists for this time period
-    -- increment noOfDeliveries by 1 when Order with same riderId is completed
 );
 
 -- triggers:
--- 1. stated above
+-- 1. every insertion into this table needs to be accompanied by an insertion into monthly or weekly schedules table
+-- 2. for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
+        -- if clash, raise exception: schedule already exists for this time period
+-- 3. on retrieval of schedules, send a warning if the rider has not yet posted his schedule for the current work period
 
 CREATE TABLE MonthlyWorkSchedules (
     scheduleId integer,
@@ -202,10 +200,11 @@ CREATE TABLE MonthlyWorkSchedules (
     primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
-
-    -- start date end date should have exactly 4 weeks difference
-    -- insert into Schedules table for every insertion into this table
 );
+
+-- triggers:
+-- 1. ensure start date end date have exactly 4 weeks difference (27-31 days) in Schedules
+-- 2. insert into Schedules table for every insertion into this table
 
 CREATE TABLE WeeklyWorkSchedules (
     scheduleId integer,
@@ -214,10 +213,11 @@ CREATE TABLE WeeklyWorkSchedules (
     primary key (scheduleId)
     -- bcnf
     -- scheduleId -> *
-    
-    -- start date end date should have exactly 1 week difference
-    -- insert into Schedules table for every insertion into this table
 );
+
+-- triggers:
+-- 1. start date end date should have exactly 1 week difference in Schedules
+-- 2. insert into Schedules table for every insertion into this table
 
 CREATE TABLE Restaurants (
     restaurantId integer, 
@@ -232,8 +232,6 @@ CREATE TABLE Restaurants (
 );
 
 -- address: on update cascade
--- triggers:
--- 1. When a customer confirms his order, need to check whether the order exceeds the minSpend.
 
 CREATE TABLE RestaurantStaffs (
     restaurantStaffId integer,
@@ -247,6 +245,9 @@ CREATE TABLE RestaurantStaffs (
     -- bcnf
     -- restaurantStaffId -> *
 );
+
+-- triggers:
+-- 1. check email validity [ can also enforce using JS ]
 
 CREATE TABLE FoodMenuItems (
 	itemId integer,
@@ -266,10 +267,8 @@ CREATE TABLE FoodMenuItems (
 );
 
 -- triggers:
--- 1. When a customer confirms his order, qtyOrderedToday must be updated.
--- 2. When a customer picks an item, qtyOrderedToday + qty must not exceed dailyLimit.
--- 3. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false.
--- 4. When a customer rates an order, the rating must be updated.
+-- 2. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false immediately.
+-- 3. when isAvailableToday is false, hide item from menu.
 
 CREATE TABLE RestaurantPromotionalCampaigns (
     promoCode varchar,
@@ -278,10 +277,11 @@ CREATE TABLE RestaurantPromotionalCampaigns (
     foreign key (promoCode) references PromotionalCampaigns (promoCode),
     primary key (promoCode)
     -- no FDs
-
-    -- insert into PromotionalCampaigns table for every insertion into this table
-    -- ensure promoTypeEnum is selected correctly
 );
+
+-- triggers:
+-- 1. insert into PromotionalCampaigns table for every insertion into this table
+-- 2. ensure promoTypeEnum is selected correctly in corresponding PromotionalCampaigns tuple
 
 
 CREATE TABLE FoodItemPromotionalCampaigns (
@@ -293,10 +293,12 @@ CREATE TABLE FoodItemPromotionalCampaigns (
     foreign key (promoCode) references PromotionalCampaigns (promoCode),
     primary key (promoCode)
     -- no FDs
-    
-    -- insert into PromotionalCampaigns table for every insertion into this table
-    -- ensure promoTypeEnum is selected correctly
+
 );
+
+-- triggers:
+-- 1. insert into PromotionalCampaigns table for every insertion into this table
+-- 2. ensure promoTypeEnum is selected correctly in PromotionalCampaigns table
 
 CREATE TABLE DeliveryServicePromotionalCampaigns (
 	promoCode varchar,
@@ -304,9 +306,12 @@ CREATE TABLE DeliveryServicePromotionalCampaigns (
     foreign key (FDSManagerId) references FoodDeliveryServiceManagers (FDSManagerId),
     foreign key (promoCode) references PromotionalCampaigns (promoCode),
     primary key (promoCode)
-    -- insert into PromotionalCampaigns table for every insertion into this table
-    -- ensure promoTypeEnum is selected correctly
+    -- no FDs
 );
+
+-- triggers:
+-- 1. insert into PromotionalCampaigns table for every insertion into this table
+-- 2. ensure promoTypeEnum is selected correctly in PromotionalCampaigns table
 
 CREATE TABLE Orders (
 	orderId integer,
@@ -332,24 +337,37 @@ CREATE TABLE Orders (
 	foreign key(customerId) references Customers(customerId),
     primary key(orderId)
     -- no FDs
-    
-    -- update foodSubTotal upon insertion into picks table *
-    -- update promoDiscount using triggers upon placing order
-    -- before/when adding timeplaced, check for non-null address, delivery fee, hasPaid (if paying by card)
-    -- before adding rider, check timeplaced & order status
-    -- before adding timeRider***, check previous timeRider*** and order status
-    -- change status to 'DELIVERING' only when rider leaves restaurant (triggers)
-    -- change status to 'DELIVERED' only when successfully delivered (triggers)
-    -- remind rider to collect cash if payment by cash
-    -- when hasPaid = true, trigger customers reward points
-    -- when order is placed, a new orderId needs to be generated and tagged to this customer
+   
 );
 
 -- triggers:
--- 1. stated above
--- 2. hasPaid needs to be set to paid after rider delivers food. (only when payment mode is cash)
--- 3. need to update promoDiscount value when promoCode is applied AND whenever a new item is added.
--- 4. When customer confirms order, need to assign a rider to the order. (check driver's availability)
+-- 1. when order is placed, a new orderId needs to be generated and tagged to this customer
+-- 2. update foodSubTotal upon insertion into Picks table with same orderId
+-- 3. when promoCode added to order:
+	-- a. check type of promoCode
+	-- b. check if promoCode is valid (correct restaurant, or appropriate food item selected)
+	-- c. if valid, update promoDiscount accordingly
+	-- d. else, promoDiscount will be 0
+-- 4. before/when adding timePlaced, check for:
+	-- a. non-null address (ensure customer has placed address) 
+	-- b. hasPaid (if paying by card - paymentCardNoIfUsed)
+	-- c. check if order exceeds restaurant's minSpend for each restaurant
+-- 5. upon adding of timePlaced:
+	-- a. update order status enum
+	-- b. allocate riderId and deliveryFee
+		-- set isAvailable for chosen rider (in DeliveryRiders table) to false
+		-- if no riders available, raise error
+	-- c. increment qtyOrderedToday of all food items chosen by 1
+	-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
+-- 7. before adding timeRider***, check previous timeRider*** and order status
+-- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
+-- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
+-- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
+-- 11. When rider finishes an order: 
+	-- if hasPaid = true, allocate reward points to customers
+	-- set isAvailable for rider (in DeliveryRiders) to true
+    -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
+-- 12. if the customer rates the order, the rider's rating must be updated accordingly.
 
 CREATE TABLE Picks (
 	orderId integer,
@@ -359,9 +377,10 @@ CREATE TABLE Picks (
 	foreign key (itemId) references FoodMenuItems(itemId),
 	primary key (orderId, itemId)
     -- no FDs
-    
-    --  every insertion should update foodSubTotal in the corresponding Orders record
 );
+
+-- triggers:
+-- 1. every insertion should update foodSubTotal in the corresponding Orders record
 
 CREATE TABLE FoodReviews (
     reviewId integer,
@@ -378,47 +397,18 @@ CREATE TABLE FoodReviews (
     -- reviewId -> *
 );
 
--- additional triggers:
--- 1. Every hour must have at least 5 riders working. 
---      how to enforce? feed back to FDS Manager's UI?
+-- triggers:
+-- 1. ensure review can only be submitted for a completed order.
+-- 2. when a customer rates his food, the rating in FoodMenuItems must be updated.
 
---- ***Insert Triggers here***
---- 4 categories
+/**
+ * Triggers
+ */
 
---- 1. Pre-procesing triggers
-/*
 
-CREATE OR REPLACE FUNCTION auditlogfunc() RETURNS TRIGGER AS $$
-   BEGIN
-      INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VALUES (new.ID, current_timestamp);
-      RETURN NEW;
-   END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS t r im_spaces_t r igger ON Re g i s t r a t i o n s ;
-
-CREATE TRIGGER t r im_spaces_t r igger
-BEFORE UPDATE OF company OR INSERT
-ON Re g i s t r a t i o n s
-FOR EACH ROW
-EXECUTE FUNCTION t r im_spaces ( ) ;
-
-*/
-
---- 2. Enforcing constraints
-/*
-
-*/
-
---- 3. Maintaining other database information upon changes
-/*
-
-*/
-
---- 4. Sending Notifications
-/*
-
-*/
+/**
+ * Insertion of test data
+ */
 
 INSERT INTO FoodDeliveryServiceManagers
 values 
