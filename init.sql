@@ -21,6 +21,7 @@ DROP TYPE IF EXISTS discountTypeEnum CASCADE;
 DROP TYPE IF EXISTS promoApplicableForEnum CASCADE;
 DROP TYPE IF EXISTS orderStatusEnum CASCADE;
 DROP TYPE IF EXISTS foodCategoryEnum CASCADE;
+DROP TYPE IF EXISTS scheduleTypeEnum CASCADE;
 
 CREATE TYPE orderStatusEnum as ENUM (
     'CART',
@@ -58,6 +59,11 @@ CREATE TYPE promoApplicableForEnum as ENUM (
     'ONLY-FOR-FIRST-ACCOUNT-ORDER',
     'MAX-DAYS-SINCE-LAST-ORDER',
     'MIN-DAYS-SINCE-LAST-ORDER'
+);
+
+CREATE TYPE scheduleTypeEnum as ENUM (
+	'MONTHLY',
+	'WEEKLY'
 );
 
 CREATE TABLE PromotionalCampaigns (
@@ -178,6 +184,7 @@ CREATE TABLE Schedules (
 	startDate timestamp not null,
 	endDate timestamp not null check (endDate >= startDate),
     datePaid timestamp check (datePaid >= endDate),
+    scheduleType scheduleTypeEnum not null,
 	feePerDelivery numeric(10, 2) not null check (feePerDelivery >= 0),
 	noOfDeliveries integer not null check (noOfDeliveries >= 0),
 	baseSalary integer not null check (baseSalary >= 0),
@@ -187,11 +194,14 @@ CREATE TABLE Schedules (
     -- scheduleId -> *
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. every insertion into this table needs to be accompanied by an insertion into monthly or weekly schedules table
 -- 2. for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
         -- if clash, raise exception: schedule already exists for this time period
--- 3. on retrieval of schedules, send a warning if the rider has not yet posted his schedule for the current work period
+
+-- final implementation:
+-- 1 can be monitored in the front-end (ensure that schedule details and daily schedule are submitted tgt)
+-- 2 is implemented as a trigger
 
 CREATE TABLE MonthlyWorkSchedules (
     scheduleId integer,
@@ -215,9 +225,13 @@ CREATE TABLE MonthlyWorkSchedules (
     -- scheduleId -> *
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. ensure start date end date have exactly 4 weeks difference (27-31 days) in Schedules
 -- 2. insert into Schedules table for every insertion into this table
+
+-- final implementation:
+-- 1 is implemented as a trigger on Schedules
+-- 2 is to be enforced in front-end.
 
 CREATE TABLE WeeklyWorkSchedules (
     scheduleId integer,
@@ -228,9 +242,13 @@ CREATE TABLE WeeklyWorkSchedules (
     -- scheduleId -> *
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. start date end date should have exactly 1 week difference in Schedules
 -- 2. insert into Schedules table for every insertion into this table
+
+-- final implementation:
+-- 1 is implemented as a trigger on Schedules
+-- 2 is to be enforced in front-end.
 
 CREATE TABLE Restaurants (
     restaurantId integer, 
@@ -259,8 +277,8 @@ CREATE TABLE RestaurantStaffs (
     -- restaurantStaffId -> *
 );
 
--- triggers:
--- 1. check email validity [ can also enforce using JS ]
+-- to enforce in front-end:
+-- 1. check email validity
 
 CREATE TABLE FoodMenuItems (
 	itemId integer,
@@ -279,29 +297,34 @@ CREATE TABLE FoodMenuItems (
 	-- itemId -> restaurantId, and itemId is a primary key
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. When qtyOrderedToday >= dailyLimit, isAvailableToday must be set to false immediately.
--- 2. when isAvailableToday is false, hide item from menu.
+
+-- final implementation:
+-- trigger implemented for 1
 
 CREATE TABLE RestaurantPromotionalCampaigns (
     promoCode varchar,
-	restaurantStaffId integer not null,
-	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId),
+	restaurantId integer not null,
+	foreign key (restaurantId) references Restaurants(restaurantId),
     foreign key (promoCode) references PromotionalCampaigns (promoCode),
     primary key (promoCode)
     -- no FDs
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. insert into PromotionalCampaigns table for every insertion into this table
 -- 2. ensure promoTypeEnum is selected correctly in corresponding PromotionalCampaigns tuple
+
+-- final implementation:
+-- 1 and 2 can be enforced in front-end.
 
 
 CREATE TABLE FoodItemPromotionalCampaigns (
     promoCode varchar,
-    restaurantStaffId integer not null,
+    restaurantId integer not null,
 	itemId integer not null,
-	foreign key (restaurantStaffId) references RestaurantStaffs(restaurantStaffId),
+	foreign key (restaurantId) references Restaurants(restaurantId),
 	foreign key (itemId) references FoodMenuItems(itemId),
     foreign key (promoCode) references PromotionalCampaigns (promoCode),
     primary key (promoCode)
@@ -309,9 +332,12 @@ CREATE TABLE FoodItemPromotionalCampaigns (
 
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. insert into PromotionalCampaigns table for every insertion into this table
 -- 2. ensure promoTypeEnum is selected correctly in PromotionalCampaigns table
+
+-- final implementation:
+-- 1 and 2 can be enforced in front-end.
 
 CREATE TABLE DeliveryServicePromotionalCampaigns (
 	promoCode varchar,
@@ -322,7 +348,7 @@ CREATE TABLE DeliveryServicePromotionalCampaigns (
     -- no FDs
 );
 
--- triggers:
+-- initial trigger ideas:
 -- 1. insert into PromotionalCampaigns table for every insertion into this table
 -- 2. ensure promoTypeEnum is selected correctly in PromotionalCampaigns table
 
@@ -415,16 +441,157 @@ CREATE TABLE FoodReviews (
 -- 1. ensure review can only be submitted for a completed order.
 -- 2. when a customer rates his food, the rating in FoodMenuItems must be updated.
 
--- no way to activate triggers based on time, or upon query (SELECT)
-
 /**
  * Triggers
  */
 
-/* PromotionalCampaigns triggers */
+/* DeliveryRiders triggers */
 
--- isActive checks: if selected promo code is still in date / disabled
-CREATE OR REPLACE FUNCTION valid_code_check() RETURNS TRIGGER AS $$
+-- if rider isDeleted, make isAvailable false
+CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE DeliveryRiders
+	SET isAvailable = FALSE
+	WHERE riderId = NEW.riderId;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
+CREATE TRIGGER not_available_when_deleted
+	AFTER UPDATE OF isDeleted ON DeliveryRiders
+	FOR EACH ROW
+	EXECUTE FUNCTION make_unavailable();
+
+/* Schedules triggers */
+
+-- for every insertion, check all other tuples with same riderId and ensure no tuples with same date
+CREATE OR REPLACE FUNCTION check_existing_schedule() RETURNS TRIGGER AS $$
+BEGIN
+	IF EXISTS (SELECT 1 
+			   FROM Schedules S
+			   WHERE S.riderId = NEW.riderId
+			   AND ((NEW.startDate BETWEEN S.startDate AND S.endDate)
+			   		OR (NEW.endDate BETWEEN S.startDate AND S.endDate))
+			   ) THEN
+		RAISE exception 'You already have a schedule for this time period.';
+	ELSE
+		RETURN NEW;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS existing_schedule_trigger ON Schedules;
+CREATE TRIGGER existing_schedule_trigger
+	BEFORE INSERT ON Schedules
+	FOR EACH ROW
+	EXECUTE FUNCTION check_existing_schedule();
+
+-- ensure each schedule is either monthly (28-31 days) or weekly (7 days)
+CREATE OR REPLACE FUNCTION check_date_validity() RETURNS TRIGGER AS $$
+BEGIN
+	IF NEW.scheduleType = 'MONTHLY' THEN
+		IF NEW.endDate::DATE - NEW.startDate::DATE < 28 OR NEW.endDate::DATE - NEW.startDate::DATE > 31 THEN
+			RAISE exception 'Please select a schedule for a 1-month period.';
+		END IF;
+	ELSIF NEW.scheduleType = 'WEEKLY' THEN
+		IF NEW.endDate::DATE - NEW.startDate::DATE <> 7 THEN
+			RAISE exception 'Please select a schedule for a 1-week period.';
+		END IF;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS date_validity_trigger ON Schedules;
+CREATE TRIGGER date_validity_trigger
+	BEFORE INSERT ON Schedules
+	FOR EACH ROW
+	EXECUTE FUNCTION check_date_validity();
+
+/* FoodMenuItems triggers */
+
+-- set isAvailableToday to false when qtyOrderedToday >= dailyLimit
+CREATE OR REPLACE FUNCTION food_item_unavailable() RETURNS TRIGGER AS $$
+DECLARE
+	qtyOrderedToday integer;
+	dailyLimit integer;
+BEGIN
+	SELECT FMI.qtyOrderedToday, FMI.dailyLimit INTO qtyOrderedToday, dailyLimit
+	FROM FoodMenuItems FMI
+	WHERE itemId = NEW.itemId;
+
+	IF qtyOrderedToday >= dailyLimit THEN
+		UPDATE FoodMenuItems
+		SET isAvailableToday = FALSE
+		WHERE itemId = NEW.itemId;
+	END IF;
+	RETURN NEW;	
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS daily_limit_trigger ON FoodMenuItems;
+CREATE TRIGGER daily_limit_trigger
+	AFTER UPDATE OF qtyOrderedToday ON FoodMenuItems
+	FOR EACH ROW
+	EXECUTE FUNCTION food_item_unavailable();
+
+/* Orders triggers */
+
+-- triggers:
+-- 1. when order is placed, a new orderId needs to be generated and tagged to this customer
+-- 2. update foodSubTotal upon insertion into Picks table with same orderId
+-- 3. when promoCode added to order:
+	-- a. check type of promoCode
+	-- b. check if promoCode is valid (correct restaurant, or appropriate food item selected)
+	-- c. if valid, update promoDiscount accordingly
+	-- d. else, promoDiscount will be 0
+-- 4. before/when adding timePlaced, check for:
+	-- a. non-null address (ensure customer has placed address) 
+	-- b. hasPaid (if paying by card - paymentCardNoIfUsed)
+	-- c. check if order exceeds restaurant's minSpend for each restaurant
+-- 5. upon adding of timePlaced:
+	-- a. update order status enum
+	-- b. allocate riderId and deliveryFee
+		-- set isAvailable for chosen rider (in DeliveryRiders table) to false
+		-- if no riders available, raise error
+	-- c. increment qtyOrderedToday of all food items chosen by 1
+	-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
+-- 7. before adding timeRider***, check previous timeRider*** and order status
+-- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
+-- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
+-- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
+-- 11. When rider finishes an order: 
+	-- if hasPaid = true, allocate reward points to customers
+	-- set isAvailable for rider (in DeliveryRiders) to true
+    -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
+-- 12. if the customer rates the order, the rider's rating must be updated accordingly.
+
+-- update foodSubTotal in Orders upon insertion into Picks table
+CREATE OR REPLACE FUNCTION subtotal_update() RETURNS TRIGGER AS $$
+DECLARE
+	price numeric(10, 2);
+BEGIN
+	SELECT FMI.price INTO price
+	FROM FoodMenuItems FMI
+	WHERE FMI.itemId = NEW.itemId;
+
+	UPDATE Orders
+	SET foodSubTotal = foodSubTotal + (NEW.qtyOrdered - COALESCE(OLD.qtyOrdered, 0)) * price
+	WHERE orderId = NEW.orderId;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS food_subtotal_trigger ON Picks;
+CREATE TRIGGER food_subtotal_trigger
+	AFTER UPDATE OF itemId, qtyOrdered OR INSERT ON Picks
+	FOR EACH ROW
+	EXECUTE FUNCTION subtotal_update();
+
+-- upon selection of promo code into order, check if promo code is still in date / disabled
+-- runs first due to alphabetical order
+CREATE OR REPLACE FUNCTION code_date_check() RETURNS TRIGGER AS $$
 DECLARE
 	endDateTime timestamp;
 	isActive boolean;
@@ -444,65 +611,135 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS valid_code_trigger ON Orders;
-CREATE TRIGGER valid_code_trigger
+DROP TRIGGER IF EXISTS code_date_trigger ON Orders;
+CREATE TRIGGER code_date_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
-	EXECUTE FUNCTION valid_code_check();
+	EXECUTE FUNCTION code_date_check();
 
-/* DeliveryRiders triggers */
-
--- if rider isDeleted, make isAvailable false
-CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
+-- check if promo code applies to this order
+	-- min. expenditure met?
+	-- correct restaurant? 
+	-- appropriate food item selected?
+CREATE OR REPLACE FUNCTION code_requirements_check() RETURNS TRIGGER AS $$
+DECLARE
+	promoType promoTypeEnum;
+	minSpend numeric(10, 2);
+	currentSubtotal numeric(10, 2);
+	restaurantId integer;
+	itemId integer; 
 BEGIN
-	UPDATE DeliveryRiders
-	SET isAvailable = FALSE
-	WHERE riderId = NEW.riderId;
+	SELECT PC.promoType, PC.minSpend INTO promoType, minSpend
+	FROM PromotionalCampaigns PC
+	WHERE NEW.promoCode = PC.promoCode;
+
+	-- rpc or food item promo campaign
+	IF promoType = 'RPC' THEN
+		SELECT RPC.restaurantId INTO restaurantId
+		FROM RestaurantPromotionalCampaigns RPC
+		WHERE NEW.promoCode = RPC.promoCode;
+
+		IF restaurantId NOT IN (SELECT FMI.restaurantId
+							FROM Picks P JOIN FoodMenuItems FMI ON (P.itemId = FMI.itemId)
+							WHERE NEW.orderId = P.orderId) THEN
+			RAISE exception 'This code does not apply to your order.';
+		END IF;
+	ELSIF promoType = 'FIPC' THEN
+		SELECT FIPC.itemId INTO itemId
+		FROM FoodItemPromotionalCampaigns FIPC
+		WHERE FIPC.promoCode = NEW.promoCode;
+
+		IF itemId NOT IN (SELECT P.itemId
+						  FROM Picks P
+						  WHERE P.orderId = NEW.orderId) THEN
+			RAISE exception 'This code does not apply to your order.';
+		END IF;
+	END IF;
+
+	IF NEW.foodSubTotal < minSpend THEN
+		RAISE exception 'Your order has not met the minimum expenditure requirement.';
+	END IF;
+
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
-CREATE TRIGGER not_available_when_deleted
-	AFTER UPDATE OF isDeleted ON DeliveryRiders
+DROP TRIGGER IF EXISTS code_requirements_trigger ON Orders;
+CREATE TRIGGER code_requirements_trigger
+	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
-	EXECUTE FUNCTION make_unavailable();
+	EXECUTE FUNCTION code_requirements_check();
 
-/* Schedules triggers */
-
--- Schedules triggers:
--- 1. every insertion into this table needs to be accompanied by an insertion into monthly or weekly schedules table
--- 2. for every insertion, check all other tuples with same riderId and ensure no clash of startDate and endDate
-        -- if clash, raise exception: schedule already exists for this time period
--- 3. on retrieval of schedules, send a warning if the rider has not yet posted his schedule for the current work period
-
--- for every insertion, check all other tuples with same riderId and ensure no tuples with same date
-CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
+-- check if promo code applies to this user
+	-- max./min. x days since last order by user? (check by querying past orders)
+	-- first time ordering?
+CREATE OR REPLACE FUNCTION code_user_check() RETURNS TRIGGER AS $$
+DECLARE
+	promoApplicableFor promoApplicableForEnum;
+	daysSinceLastOrder integer;
+	timeLastOrderPlaced timestamp; 
 BEGIN
-	UPDATE DeliveryRiders
-	SET isAvailable = FALSE
-	WHERE riderId = NEW.riderId;
+	SELECT PC.promoApplicableFor, PC.daysSinceLastOrder INTO promoApplicableFor, daysSinceLastOrder
+	FROM PromotionalCampaigns PC
+	WHERE NEW.promoCode = PC.promoCode;
+
+	SELECT O.timePlaced INTO timeLastOrderPlaced
+	FROM Orders O
+	WHERE O.customerId = NEW.customerId
+	AND O.orderId <> NEW.orderId
+	ORDER BY O.timePlaced desc
+	LIMIT 1;
+
+	-- rpc or food item promo campaign
+	IF promoApplicableFor = 'ONLY-FOR-FIRST-ACCOUNT-ORDER' THEN
+		IF timeLastOrderPlaced IS NOT NULL THEN
+			RAISE exception 'This code is no longer valid for your account.';
+		END IF;
+	ELSIF promoApplicableFor = 'MAX-DAYS-SINCE-LAST-ORDER' THEN
+		IF NOW()::DATE - timeLastOrderPlaced::DATE > daysSinceLastOrder OR timeLastOrderPlaced IS NULL THEN
+			RAISE exception 'This code is no longer valid for your order.';
+		END IF;
+	ELSIF promoApplicableFor = 'MIN-DAYS-SINCE-LAST-ORDER' THEN
+		IF NOW()::DATE - timeLastOrderPlaced::DATE < daysSinceLastOrder THEN
+			RAISE exception 'This code does not apply to your order.';
+		END IF;
+	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
-CREATE TRIGGER not_available_when_deleted
-	AFTER UPDATE OF isDeleted ON DeliveryRiders
+DROP TRIGGER IF EXISTS code_user_trigger ON Orders;
+CREATE TRIGGER code_user_trigger
+	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
-	EXECUTE FUNCTION make_unavailable();
+	EXECUTE FUNCTION code_user_check();
 
--- MWS triggers:
--- 1. ensure start date end date have exactly 4 weeks difference (27-31 days) in Schedules
--- 2. insert into Schedules table for every insertion into this table
+-- apply discount to foodSubTotal
+	-- promoCode can only be selected after order items are confirmed
+CREATE OR REPLACE FUNCTION code_valuation() RETURNS TRIGGER AS $$
+DECLARE
+	discountType discountTypeEnum;
+	discount numeric(10, 2);
+BEGIN
+	SELECT PC.discountType, PC.discount INTO discountType, discount
+	FROM PromotionalCampaigns PC
+	WHERE NEW.promoCode = PC.promoCode;
 
--- WWS triggers:
--- 1. start date end date should have exactly 1 week difference in Schedules
--- 2. insert into Schedules table for every insertion into this table
+	-- what about free-delivery discounts?
+	IF discountType = 'PERCENT' THEN
+		NEW.promoDiscount = (discount / 100.0) * NEW.foodSubTotal;
+	ELSIF discountType = 'DOLLAR' THEN
+		NEW.promoDiscount = discount;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-
-
-
+DROP TRIGGER IF EXISTS code_valuation_trigger ON Orders;
+CREATE TRIGGER code_valuation_trigger
+	BEFORE UPDATE OF promoCode ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION code_valuation();
 
 /**
  * Insertion of test data
@@ -556,13 +793,13 @@ values
 
 INSERT INTO Schedules
 values
-(1,1,'2020-04-05','2020-05-03','2020-05-04',2,532,1500),
-(2,2,'2020-04-10','2020-05-08','2020-05-10',2,467,1500),
-(3,3,'2020-04-07','2020-05-05','2020-05-06',2,486,1500),
-(4,4,'2020-04-09','2020-05-07','2020-05-08',2,521,1500),
-(5,5,'2020-04-03','2020-05-01','2020-05-03',2,509,1500),
-(6,6,'2020-04-03','2020-05-01','2020-05-03',2,503,1500),
-(7,7,'2020-04-04','2020-05-02','2020-05-04',2,498,1500);
+(1,1,'2020-04-05','2020-05-03','2020-05-04','MONTHLY',2,532,1500),
+(2,2,'2020-04-10','2020-05-08','2020-05-10','MONTHLY',2,467,1500),
+(3,3,'2020-04-07','2020-05-05','2020-05-06','MONTHLY',2,486,1500),
+(4,4,'2020-04-09','2020-05-07','2020-05-08','MONTHLY',2,521,1500),
+(5,5,'2020-04-03','2020-05-01','2020-05-03','MONTHLY',2,509,1500),
+(6,6,'2020-04-03','2020-05-01','2020-05-03','MONTHLY',2,503,1500),
+(7,7,'2020-04-04','2020-05-02','2020-05-04','MONTHLY',2,498,1500);
 
 INSERT INTO MonthlyWorkSchedules
 values
@@ -576,9 +813,9 @@ values
 
 INSERT INTO Schedules
 values
-(8, 8, '2020-04-05', '2020-04-12', '2020-04-14', 2, 145, 1500),
-(9, 9, '2020-04-06', '2020-04-13', '2020-04-15', 2, 150, 1500),
-(10, 10, '2020-04-03', '2020-04-10', '2020-04-12', 2, 143, 1500);
+(8, 8, '2020-04-05', '2020-04-12', '2020-04-14', 'WEEKLY', 2, 145, 1500),
+(9, 9, '2020-04-06', '2020-04-13', '2020-04-15', 'WEEKLY', 2, 150, 1500),
+(10, 10, '2020-04-03', '2020-04-10', '2020-04-12', 'WEEKLY', 2, 143, 1500);
 
 INSERT INTO WeeklyWorkSchedules
 values
@@ -681,9 +918,9 @@ INSERT INTO PromotionalCampaigns values
 
 INSERT INTO RestaurantPromotionalCampaigns values
 ('R001-50PERCENTOFF-ALL', 1),
-('R002-FREEDELIVERY-ALL', 4),
-('R003-2DOLLAROFF-FIRSTACCOUNT', 5),
-('R001-FREEDELIVERY-INACTIVE', 4);
+('R002-FREEDELIVERY-ALL', 2),
+('R003-2DOLLAROFF-FIRSTACCOUNT', 3),
+('R001-FREEDELIVERY-INACTIVE', 2);
 
 INSERT INTO PromotionalCampaigns values
 ('R004-30PERCENTOFF-ITEM004-ALL', '2020-04-04 00:00:00', '2020-06-04 00:00:00', 'FIPC', 
@@ -696,10 +933,10 @@ INSERT INTO PromotionalCampaigns values
 	'PERCENT', 100, 0, 'ALL-CUSTOMERS', null, false);
 
 INSERT INTO FoodItemPromotionalCampaigns values
-('R004-30PERCENTOFF-ITEM004-ALL', 8, 19),
-('R004-0.5DOLLAROFF-ITEM003-ALL', 8, 18),
+('R004-30PERCENTOFF-ITEM004-ALL', 4, 19),
+('R004-0.5DOLLAROFF-ITEM003-ALL', 4, 18),
 ('R002-FREEDELIVERY-3MAXDAYS-ITEM002', 3, 7),
-('R004-100PERCENTOFF-INACTIVE', 8, 19);
+('R004-100PERCENTOFF-INACTIVE', 4, 19);
 
 INSERT INTO Customers values 
 (1, 'customer001', 'password', 'customer001@gmail.com', '80000001', 
@@ -719,6 +956,10 @@ INSERT INTO Orders values
 (3, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 3),
 (4, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 4),
 (5, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 5);
+
+-- PROBLEM: if customer re-chooses extra portions of same item, there is a clash of (orderId, itemId)
+-- e.g. chooses (1, 6, 10) and then 12 more portions later: (1, 6, 12) again
+-- fix by querying before inserting; if (orderId, itemId) exists, just update
 
 -- customer 1 orders with cash:
 INSERT INTO Picks values
