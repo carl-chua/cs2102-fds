@@ -165,10 +165,11 @@ CREATE TABLE DeliveryRiders (
 
 -- final implementation:
 -- no way to schedule a time-based trigger in Postgres.
--- 1 can instead be implemented by using application logic to query for all riders every hour (check if currentTime.hour in rider's working hours)
+-- 1 can instead be checked when querying for the rider (if currentTime.hour in rider's working hours)
 -- use JS to determine if current hour in rider's working hours; if rider not supposed to be working, turn isAvailable off
 -- a trigger is written for 2
 -- 3 can be implemented by querying for all riders available in the current hour, and checking if that number > 5.
+-- isAvailable is only to be True when the rider is active (according to his schedule), but he does not currently have a delivery job.
 
 CREATE TABLE Shifts (
     shiftId integer,
@@ -399,8 +400,9 @@ CREATE TABLE Orders (
 	-- c. increment qtyOrderedToday of all food items chosen by 1
 	-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
 -- 7. before adding timeRider***, check previous timeRider*** and order status
+-- 7.5 change status to 'PREPARING' when payment is made AND restaurant accepts.
 -- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
--- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
+-- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null and hasPaid is true
 -- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
 -- 11. When rider finishes an order: 
 	-- if hasPaid = true, allocate reward points to customers
@@ -421,6 +423,7 @@ CREATE TABLE Picks (
 
 -- triggers:
 -- 1. every insertion should update foodSubTotal in the corresponding Orders record
+-- 2. when adding into picks, check if selecting item exceeds daily limit of food item
 
 CREATE TABLE FoodReviews (
     reviewId integer,
@@ -444,28 +447,25 @@ CREATE TABLE FoodReviews (
 /**
  * Triggers
  */
-
-/* Food Review Triggers */
-CREATE OR REPLACE FUNCTION check_valid_review() RETURNS TRIGGER AS $$
-DECLARE
-	status orderStatusEnum;
-BEGIN
-	SELECT O.status INTO status
-	FROM Picks P NATURAL JOIN Orders O
-	WHERE NEW.orderId = P.orderID
-	AND NEW.itemId = P.itemId;
-
-	IF status <> 'DELIVERED' THEN 
-		RAISE exception 'Review can only be created when order is completed';
-	END IF;
-	RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
+DROP TRIGGER IF EXISTS existing_schedule_trigger ON Schedules;
+DROP TRIGGER IF EXISTS date_validity_trigger ON Schedules;
+DROP TRIGGER IF EXISTS daily_limit_trigger ON FoodMenuItems;
+DROP TRIGGER IF EXISTS food_subtotal_trigger ON Picks;
+DROP TRIGGER IF EXISTS food_limit_trigger ON Picks;
+DROP TRIGGER IF EXISTS code_date_trigger ON Orders;
+DROP TRIGGER IF EXISTS code_requirements_trigger ON Orders;
+DROP TRIGGER IF EXISTS code_user_trigger ON Orders;
+DROP TRIGGER IF EXISTS code_valuation_trigger ON Orders;
+DROP TRIGGER IF EXISTS order_confirmation_trigger ON Orders;
+DROP TRIGGER IF EXISTS rider_allocation_trigger ON Orders;
+DROP TRIGGER IF EXISTS time_placed_trigger ON Orders;
+DROP TRIGGER IF EXISTS order_ready_trigger ON Orders;
+DROP TRIGGER IF EXISTS order_delivering_trigger ON Orders;
+DROP TRIGGER IF EXISTS order_delivered_trigger ON Orders;
+DROP TRIGGER IF EXISTS update_delivery_trigger ON Orders;
+DROP TRIGGER IF EXISTS update_rider_rating_trigger ON Orders;
 DROP TRIGGER IF EXISTS review_validity_trigger ON FoodReviews;
-CREATE TRIGGER review_validity_trigger
-	BEFORE INSERT ON FoodReviews
-	FOR EACH ROW
-	EXECUTE FUNCTION check_valid_review();
 
 /* DeliveryRiders triggers */
 -- if rider isDeleted, make isAvailable false
@@ -477,7 +477,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
 CREATE TRIGGER not_available_when_deleted
 	AFTER UPDATE OF isDeleted ON DeliveryRiders
 	FOR EACH ROW
@@ -501,7 +500,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS existing_schedule_trigger ON Schedules;
 CREATE TRIGGER existing_schedule_trigger
 	BEFORE INSERT ON Schedules
 	FOR EACH ROW
@@ -523,7 +521,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS date_validity_trigger ON Schedules;
 CREATE TRIGGER date_validity_trigger
 	BEFORE INSERT ON Schedules
 	FOR EACH ROW
@@ -550,7 +547,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS daily_limit_trigger ON FoodMenuItems;
 CREATE TRIGGER daily_limit_trigger
 	AFTER UPDATE OF qtyOrderedToday ON FoodMenuItems
 	FOR EACH ROW
@@ -577,7 +573,7 @@ CREATE TRIGGER daily_limit_trigger
 		-- if no riders available, raise error
 	-- c. increment qtyOrderedToday of all food items chosen by 1
 	-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
--- 7. before adding timeRider***, check previous timeRider*** and order status
+-- 7. before adding timeRider***, check previous timeRider*** and order status --> implement in front-end
 -- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
 -- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
 -- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
@@ -604,11 +600,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS food_subtotal_trigger ON Picks;
 CREATE TRIGGER food_subtotal_trigger
 	AFTER UPDATE OF itemId, qtyOrdered OR INSERT ON Picks
 	FOR EACH ROW
 	EXECUTE FUNCTION subtotal_update();
+
+-- check if food item selection exceeds daily limit
+CREATE OR REPLACE FUNCTION check_daily_limit() RETURNS TRIGGER AS $$
+DECLARE
+	dailyLimit integer;
+	qtyOrderedToday integer;
+BEGIN
+	SELECT FMI.dailyLimit, FMI.qtyOrderedToday INTO dailyLimit, qtyOrderedToday
+	FROM FoodMenuItems FMI
+	WHERE FMI.itemId = NEW.itemId;
+
+	IF NEW.qtyOrdered + qtyOrderedToday > dailyLimit THEN
+		RAISE exception 'Sorry! Due to high demand, you can only order at maximum % of this item today.', dailyLimit - qtyOrderedToday;
+	END IF;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER food_limit_trigger
+	AFTER UPDATE OF itemId, qtyOrdered OR INSERT ON Picks
+	FOR EACH ROW
+	EXECUTE FUNCTION check_daily_limit();
 
 -- upon selection of promo code into order, check if promo code is still in date / disabled
 -- runs first due to alphabetical order
@@ -632,7 +650,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS code_date_trigger ON Orders;
 CREATE TRIGGER code_date_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
@@ -685,7 +702,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS code_requirements_trigger ON Orders;
 CREATE TRIGGER code_requirements_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
@@ -729,13 +745,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS code_user_trigger ON Orders;
 CREATE TRIGGER code_user_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
 	EXECUTE FUNCTION code_user_check();
 
--- apply discount to foodSubTotal
+-- apply discount to order
 	-- promoCode can only be selected after order items are confirmed
 CREATE OR REPLACE FUNCTION code_valuation() RETURNS TRIGGER AS $$
 DECLARE
@@ -756,7 +771,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS code_valuation_trigger ON Orders;
 CREATE TRIGGER code_valuation_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
@@ -789,7 +803,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS order_confirmation_trigger ON Orders;
 CREATE TRIGGER order_confirmation_trigger
 	BEFORE UPDATE OF timePlaced ON Orders
 	FOR EACH ROW
@@ -810,23 +823,29 @@ BEGIN
 	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
 						   JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
 						   LEFT JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
-	WHERE (S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NOW()::DATE) - 1][EXTRACT(HOUR FROM NOW()) - 10] = TRUE)
+	WHERE DR.isAvailable = TRUE
+	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE) - 1][EXTRACT(HOUR FROM NEW.timePlaced) - 10] = TRUE)
 	OR (S.scheduleType = 'MONTHLY' AND CASE
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 1 THEN MWS.monShift
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 2 THEN MWS.tueShift
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 3 THEN MWS.wedShift
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 4 THEN MWS.thuShift
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 5 THEN MWS.friShift
-											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 6 THEN MWS.satShift
-										    WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 7 THEN MWS.sunShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 1 THEN MWS.monShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 2 THEN MWS.tueShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 3 THEN MWS.wedShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 4 THEN MWS.thuShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 5 THEN MWS.friShift
+											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 6 THEN MWS.satShift
+										    WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 7 THEN MWS.sunShift
 										END
 									= CASE
-											WHEN ((EXTRACT(HOUR FROM NOW()) >= 10 AND EXTRACT(HOUR FROM NOW()) <= 14) OR (EXTRACT(HOUR FROM NOW()) >= 15 AND EXTRACT(HOUR FROM NOW()) <= 19)) THEN 1
-											WHEN ((EXTRACT(HOUR FROM NOW()) >= 11 AND EXTRACT(HOUR FROM NOW()) <= 15) OR (EXTRACT(HOUR FROM NOW()) >= 16 AND EXTRACT(HOUR FROM NOW()) <= 20)) THEN 2
-											WHEN ((EXTRACT(HOUR FROM NOW()) >= 12 AND EXTRACT(HOUR FROM NOW()) <= 16) OR (EXTRACT(HOUR FROM NOW()) >= 17 AND EXTRACT(HOUR FROM NOW()) <= 21)) THEN 3
-											WHEN ((EXTRACT(HOUR FROM NOW()) >= 13 AND EXTRACT(HOUR FROM NOW()) <= 17) OR (EXTRACT(HOUR FROM NOW()) >= 18 AND EXTRACT(HOUR FROM NOW()) <= 22)) THEN 4
-										END)
+											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 10 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 14) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 15 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 19)) THEN 1
+											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 11 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 15) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 16 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 20)) THEN 2
+											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 12 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 16) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 17 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 21)) THEN 3
+											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 13 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 17) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 18 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 22)) THEN 4
+		
+										END))
 	LIMIT 1;
+
+	IF riderChosenId IS NULL THEN
+		RAISE exception 'Sorry! There are no riders currently available at this time. Please try again later!';
+	END IF;
 
 	UPDATE DeliveryRiders
 	SET isAvailable = FALSE
@@ -834,11 +853,11 @@ BEGIN
 
 	NEW.riderId = riderChosenId;
 	NEW.deliveryFee = deliveryFee;
+	NEW.timeRiderAccepts = NEW.timePlaced; -- change to NOW() later
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS rider_allocation_trigger ON Orders;
 CREATE TRIGGER rider_allocation_trigger
 	BEFORE UPDATE OF timePlaced ON Orders
 	FOR EACH ROW
@@ -846,8 +865,16 @@ CREATE TRIGGER rider_allocation_trigger
 
 -- c. increment qtyOrderedToday of all food items chosen by 1
 -- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
+-- update order status to preparing
 CREATE OR REPLACE FUNCTION update_details() RETURNS TRIGGER AS $$
+DECLARE
+	mostRecentAddress1 varchar;
+	mostRecentAddress2 varchar;
+	mostRecentAddress3 varchar;
+	mostRecentAddress4 varchar;
+	mostRecentAddress5 varchar;
 BEGIN
+	-- increment qtyOrderedToday of all food items
 	UPDATE FoodMenuItems FMI
 	SET qtyOrderedToday = qtyOrderedToday + P.qtyOrdered
 	FROM Picks P
@@ -855,16 +882,195 @@ BEGIN
 	AND P.orderId = NEW.orderId;
 
 	-- add delivery address to customer IF does not exist
+	SELECT C.mostRecentAddress1, C.mostRecentAddress2, C.mostRecentAddress3, C.mostRecentAddress4, C.mostRecentAddress5 INTO mostRecentAddress1, mostRecentAddress2, mostRecentAddress3, mostRecentAddress4, mostRecentAddress5
+	FROM Customers C
+	WHERE C.customerId = NEW.customerId;
+
+	IF (NEW.address <> mostRecentAddress1) AND (NEW.address <> mostRecentAddress2) AND (NEW.address <> mostRecentAddress3) AND (NEW.address <> mostRecentAddress4) AND (NEW.address <> mostRecentAddress5) THEN
+		UPDATE Customers C
+		SET mostRecentAddress5 = mostRecentAddress4,
+			mostRecentAddress4 = mostRecentAddress3,
+			mostRecentAddress3 = mostRecentAddress2,
+			mostRecentAddress2 = mostRecentAddress1,
+			mostRecentAddress1 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	ELSIF mostRecentAddress1 IS NULL THEN
+		UPDATE Customers C
+		SET mostRecentAddress1 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	ELSIF mostRecentAddress2 IS NULL THEN
+		UPDATE Customers C
+		SET mostRecentAddress2 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	ELSIF mostRecentAddress3 IS NULL THEN
+		UPDATE Customers C
+		SET mostRecentAddress3 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	ELSIF mostRecentAddress4 IS NULL THEN
+		UPDATE Customers C
+		SET mostRecentAddress4 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	ELSIF mostRecentAddress5 IS NULL THEN
+		UPDATE Customers C
+		SET mostRecentAddress5 = NEW.address
+		WHERE C.customerId = NEW.customerId;
+	END IF; 
+
+	NEW.status = 'PREPARING';
 
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS time_placed_trigger ON Orders;
 CREATE TRIGGER time_placed_trigger
 	BEFORE UPDATE OF timePlaced ON Orders
 	FOR EACH ROW
 	EXECUTE FUNCTION update_details();
+
+-- 7. before adding timeRider***, check previous timeRider*** and order status
+-- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
+-- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
+
+-- update order status to 'READY-FOR-DELIVERY' when rider arrives at restaurant
+CREATE OR REPLACE FUNCTION order_ready_update() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.status = 'PREPARING' THEN
+		NEW.status = 'READY-FOR-DELIVERY';
+	ELSE
+		RAISE exception 'The order has not been confirmed by the restaurant yet.';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER order_ready_trigger
+	BEFORE UPDATE OF timeRiderArrivesRestaurant ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION order_ready_update();
+
+-- update order status to 'DELIVERING' when rider leaves restaurant
+CREATE OR REPLACE FUNCTION order_delivering_update() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.status = 'READY-FOR-DELIVERY' THEN
+		NEW.status = 'DELIVERING';
+	ELSE
+		RAISE exception 'Please acknowledge that the order is ready for collection first.';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER order_delivering_trigger
+	BEFORE UPDATE OF timeRiderLeavesRestaurant ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION order_delivering_update();
+
+-- ensure payment is made before confirming successful delivery
+CREATE OR REPLACE FUNCTION order_delivered_update() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.status <> 'DELIVERING' THEN
+		RAISE exception 'Please acknowledge that you have collected the order from the restaurant first.';
+	END IF;
+
+	IF NEW.hasPaid IS FALSE THEN
+		RAISE exception 'Please ensure the rider has completed payment (by cash or card) before confirming that the order has been delivered.';
+	END IF;
+
+	NEW.status = 'DELIVERED';
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER order_delivered_trigger
+	BEFORE UPDATE OF timeRiderLeavesRestaurant ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION order_delivered_update();
+
+-- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
+-- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
+-- 11. When rider finishes an order: 
+	-- if hasPaid = true, allocate reward points to customers
+	-- set isAvailable for rider (in DeliveryRiders) to true
+    -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
+-- 12. if the customer rates the order, the rider's rating must be updated accordingly.
+
+-- post-delivery updates for customers and riders
+CREATE OR REPLACE FUNCTION update_delivery_details() RETURNS TRIGGER AS $$
+BEGIN
+	-- add subtotal as reward points for customer
+	UPDATE Customers C
+	SET rewardPoints = rewardPoints + GREATEST(NEW.foodSubTotal + deliveryFee - promoDiscount, 0)
+	WHERE NEW.customerId = C.customerId;
+
+	-- mark delivery rider as available
+	UPDATE DeliveryRiders DR
+	SET isAvailable = TRUE
+	WHERE DR.riderId = NEW.riderId;
+
+	-- increment noOfDeliveries for rider
+	UPDATE Schedules S
+	SET noOfDeliveries = noOfDeliveries + 1
+	WHERE S.riderId = NEW.riderId
+	AND startDate < NEW.timePlaced AND endDate > NEW.timePlaced;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_delivery_trigger
+	BEFORE UPDATE OF timeRiderLeavesRestaurant ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION update_delivery_details();
+
+-- propagate customer's rating of delivery rider
+CREATE OR REPLACE FUNCTION update_rider_rating() RETURNS TRIGGER AS $$
+DECLARE
+	noOfDeliveries integer;
+	riderRating numeric(3, 2);
+BEGIN
+	IF NEW.status <> "DELIVERED" THEN
+		RAISE exception 'You can only rate the delivery rider after the delivery is complete.';
+	END IF;
+
+	SELECT SUM(noOfDeliveries)
+	FROM Schedules S
+	GROUP BY S.riderId
+	HAVING S.riderId = NEW.riderId;
+
+	SELECT DR.overallRating INTO riderRating
+	FROM DeliveryRiders DR
+	WHERE DR.riderId = NEW.riderId;
+
+	UPDATE DeliveryRiders DR
+	SET overallRating = ((riderRating * (noOfDeliveries - 1)) + NEW.deliveryRating) / noOfDeliveries
+	WHERE DR.riderId = NEW.riderId;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_rider_rating_trigger
+	BEFORE UPDATE OF deliveryRating ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION update_rider_rating();
+
+-- ensure food review can only be submitted after delivery is complete
+CREATE OR REPLACE FUNCTION check_valid_review() RETURNS TRIGGER AS $$
+DECLARE
+	rating integer;
+	noOfReviews integer;
+BEGIN
+	IF NEW.status <> 'DELIVERED' THEN 
+		RAISE exception 'Review can only be created when order is completed';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER review_validity_trigger
+	BEFORE INSERT ON FoodReviews
+	FOR EACH ROW
+	EXECUTE FUNCTION check_valid_review();
 
 /**
  * Insertion of test data
