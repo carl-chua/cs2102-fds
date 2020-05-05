@@ -554,35 +554,6 @@ CREATE TRIGGER daily_limit_trigger
 
 /* Orders triggers */
 
--- triggers:
--- 1. when order is placed, a new orderId needs to be generated and tagged to this customer
--- 2. update foodSubTotal upon insertion into Picks table with same orderId
--- 3. when promoCode added to order:
-	-- a. check type of promoCode
-	-- b. check if promoCode is valid (correct restaurant, or appropriate food item selected)
-	-- c. if valid, update promoDiscount accordingly
-	-- d. else, promoDiscount will be 0
--- 4. before/when adding timePlaced, check for:
-	-- a. non-null address (ensure customer has placed address) 
-	-- b. hasPaid (if paying by card - paymentCardNoIfUsed)
-	-- c. check if order exceeds restaurant's minSpend for each restaurant
--- 5. upon adding of timePlaced:
-	-- a. update order status enum
-	-- b. allocate riderId and deliveryFee
-		-- set isAvailable for chosen rider (in DeliveryRiders table) to false
-		-- if no riders available, raise error
-	-- c. increment qtyOrderedToday of all food items chosen by 1
-	-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
--- 7. before adding timeRider***, check previous timeRider*** and order status --> implement in front-end
--- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
--- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
--- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
--- 11. When rider finishes an order: 
-	-- if hasPaid = true, allocate reward points to customers
-	-- set isAvailable for rider (in DeliveryRiders) to true
-    -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
--- 12. if the customer rates the order, the rider's rating must be updated accordingly.
-
 -- update foodSubTotal in Orders upon insertion into Picks table
 CREATE OR REPLACE FUNCTION subtotal_update() RETURNS TRIGGER AS $$
 DECLARE
@@ -808,11 +779,8 @@ CREATE TRIGGER order_confirmation_trigger
 	FOR EACH ROW
 	EXECUTE FUNCTION order_details_check();
 
--- 5. upon adding of timePlaced:
-	-- a. update order status enum
-	-- b. allocate riderId and deliveryFee
-		-- set isAvailable for chosen rider (in DeliveryRiders table) to false
-		-- if no riders available, raise error
+-- allocate rider once order is placed successfully
+-- if no riders available, raise error
 CREATE OR REPLACE FUNCTION allocate_rider() RETURNS TRIGGER AS $$
 DECLARE
 	riderChosenId integer;
@@ -863,8 +831,8 @@ CREATE TRIGGER rider_allocation_trigger
 	FOR EACH ROW
 	EXECUTE FUNCTION allocate_rider();
 
--- c. increment qtyOrderedToday of all food items chosen by 1
--- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
+-- increment qtyOrderedToday of all food items chosen
+-- add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
 -- update order status to preparing
 CREATE OR REPLACE FUNCTION update_details() RETURNS TRIGGER AS $$
 DECLARE
@@ -927,10 +895,6 @@ CREATE TRIGGER time_placed_trigger
 	FOR EACH ROW
 	EXECUTE FUNCTION update_details();
 
--- 7. before adding timeRider***, check previous timeRider*** and order status
--- 8. change status to 'DELIVERING' only when timeRiderLeavesRestaurant is non-null
--- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
-
 -- update order status to 'READY-FOR-DELIVERY' when rider arrives at restaurant
 CREATE OR REPLACE FUNCTION order_ready_update() RETURNS TRIGGER AS $$
 BEGIN
@@ -982,24 +946,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER order_delivered_trigger
-	BEFORE UPDATE OF timeRiderLeavesRestaurant ON Orders
+	BEFORE UPDATE OF timeRiderDelivered ON Orders
 	FOR EACH ROW
 	EXECUTE FUNCTION order_delivered_update();
-
--- 9. change status to 'DELIVERED' only when timeRiderDelivered is non-null
--- 10. hasPaid needs to be set to true after rider delivers food. (only when payment mode is cash)
--- 11. When rider finishes an order: 
-	-- if hasPaid = true, allocate reward points to customers
-	-- set isAvailable for rider (in DeliveryRiders) to true
-    -- increment noOfDeliveries by 1 for rider in DeliveryRiders table
--- 12. if the customer rates the order, the rider's rating must be updated accordingly.
 
 -- post-delivery updates for customers and riders
 CREATE OR REPLACE FUNCTION update_delivery_details() RETURNS TRIGGER AS $$
 BEGIN
 	-- add subtotal as reward points for customer
 	UPDATE Customers C
-	SET rewardPoints = rewardPoints + GREATEST(NEW.foodSubTotal + deliveryFee - promoDiscount, 0)
+	SET rewardPoints = rewardPoints + GREATEST(NEW.foodSubTotal + NEW.deliveryFee - NEW.promoDiscount, 0)
 	WHERE NEW.customerId = C.customerId;
 
 	-- mark delivery rider as available
@@ -1086,12 +1042,12 @@ values
 
 INSERT INTO PromotionalCampaigns
 values
-('20%OFF-FORALL', '2020-04-04', '2020-04-24', 'FDPC', 'PERCENT', 20.00, 10.00, 'ALL-CUSTOMERS', NULL, true),
-('$5OFF-FORFIRSTORDER', '2020-04-02', '2020-04-22', 'FDPC', 'DOLLAR', 5, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, true),
-('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', '2020-04-05', '2020-04-25', 'FDPC', 'FREE-DELIVERY', NULL, NULL, 'MIN-DAYS-SINCE-LAST-ORDER', 30, true),
-('10%OFF-HAVEORDEREDINLAST5DAYS', '2020-04-07', '2020-04-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, true),
-('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', '2020-03-07', '2020-03-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, false),
-('$10FF-FORFIRSTORDER-EXPIRED', '2020-03-07', '2020-03-27', 'FDPC', 'DOLLAR', 10.00, NULL, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, false);
+('20%OFF-FORALL', '2020-05-04', '2020-05-24', 'FDPC', 'PERCENT', 20.00, 10.00, 'ALL-CUSTOMERS', NULL, true),
+('$5OFF-FORFIRSTORDER', '2020-05-02', '2020-05-22', 'FDPC', 'DOLLAR', 5, 10.00, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, true),
+('FREEDELIVERY-HAVENOTORDEREDINLAST30DAYS', '2020-05-05', '2020-05-25', 'FDPC', 'FREE-DELIVERY', NULL, NULL, 'MIN-DAYS-SINCE-LAST-ORDER', 30, true),
+('10%OFF-HAVEORDEREDINLAST5DAYS', '2020-05-07', '2020-05-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, true),
+('10%OFF-HAVEORDEREDINLAST5DAYS-EXPIRED', '2020-05-07', '2020-05-27', 'FDPC', 'PERCENT', 10.00, NULL, 'MAX-DAYS-SINCE-LAST-ORDER', 5, false),
+('$10FF-FORFIRSTORDER-EXPIRED', '2020-05-07', '2020-05-27', 'FDPC', 'DOLLAR', 10.00, NULL, 'ONLY-FOR-FIRST-ACCOUNT-ORDER', NULL, false);
 
 INSERT INTO DeliveryServicePromotionalCampaigns
 values
@@ -1105,13 +1061,13 @@ values
 INSERT INTO DeliveryRiders 
 values
 (1, 'rider001', 'password', '81111111', 'rider001@gmail.com', false, true, 4.67),
-(2, 'rider002', 'password', '82222222', 'rider002@gmail.com', false, false, 4.75),
+(2, 'rider002', 'password', '82222222', 'rider002@gmail.com', false, true, 4.75),
 (3, 'rider003', 'password', '83333333', 'rider003@gmail.com', true, true, 4.32),
 (4, 'rider004', 'password', '84444444', 'rider004@gmail.com', true, false, 4.03),
 (5, 'rider005', 'password', '85555555', 'rider005@gmail.com', false, true, 4.85),
 (6, 'rider006', 'password', '86666666', 'rider006@gmail.com', false, true, 4.97),
-(7, 'rider007', 'password', '87777777', 'rider007@gmail.com', false, false, 4.87),
-(8, 'rider008', 'password', '88888888', 'rider008@gmail.com', true, false, 4.54),
+(7, 'rider007', 'password', '87777777', 'rider007@gmail.com', false, true, 4.87),
+(8, 'rider008', 'password', '88888888', 'rider008@gmail.com', false, true, 4.54),
 (9, 'rider009', 'password', '89999999', 'rider009@gmail.com', true, true, 4.44),
 (10, 'rider010', 'password', '80000000', 'rider010@gmail.com', false, true, 4.89);
 
@@ -1124,13 +1080,13 @@ values
 
 INSERT INTO Schedules
 values
-(1,1,'2020-04-05','2020-05-03','2020-05-04','MONTHLY',2,532,1500),
-(2,2,'2020-04-10','2020-05-08','2020-05-10','MONTHLY',2,467,1500),
-(3,3,'2020-04-07','2020-05-05','2020-05-06','MONTHLY',2,486,1500),
-(4,4,'2020-04-09','2020-05-07','2020-05-08','MONTHLY',2,521,1500),
-(5,5,'2020-04-03','2020-05-01','2020-05-03','MONTHLY',2,509,1500),
-(6,6,'2020-04-03','2020-05-01','2020-05-03','MONTHLY',2,503,1500),
-(7,7,'2020-04-04','2020-05-02','2020-05-04','MONTHLY',2,498,1500);
+(1,1,'2020-05-01','2020-06-01','2020-06-04','MONTHLY',2,532,1500),
+(2,2,'2020-05-02','2020-06-02','2020-06-10','MONTHLY',2,467,1500),
+(3,3,'2020-05-07','2020-06-05','2020-06-06','MONTHLY',2,486,1500),
+(4,4,'2020-05-09','2020-06-07','2020-06-08','MONTHLY',2,521,1500),
+(5,5,'2020-05-03','2020-06-01','2020-06-03','MONTHLY',2,509,1500),
+(6,6,'2020-05-03','2020-06-01','2020-06-03','MONTHLY',2,503,1500),
+(7,7,'2020-05-04','2020-06-02','2020-06-04','MONTHLY',2,498,1500);
 
 INSERT INTO MonthlyWorkSchedules
 values
@@ -1144,9 +1100,9 @@ values
 
 INSERT INTO Schedules
 values
-(8, 8, '2020-04-05', '2020-04-12', '2020-04-14', 'WEEKLY', 2, 145, 1500),
-(9, 9, '2020-04-06', '2020-04-13', '2020-04-15', 'WEEKLY', 2, 150, 1500),
-(10, 10, '2020-04-03', '2020-04-10', '2020-04-12', 'WEEKLY', 2, 143, 1500);
+(8, 8, '2020-05-05', '2020-05-12', '2020-05-14', 'WEEKLY', 2, 145, 1500),
+(9, 9, '2020-05-06', '2020-05-13', '2020-05-15', 'WEEKLY', 2, 150, 1500),
+(10, 10, '2020-05-03', '2020-05-10', '2020-05-12', 'WEEKLY', 2, 143, 1500);
 
 INSERT INTO WeeklyWorkSchedules
 values
@@ -1301,39 +1257,32 @@ INSERT INTO Locations values
 ('customer001add001area001', 'area001');
 -- order placed
 UPDATE Orders SET
-    status = 'PENDING',
-    deliveryFee = 5,
-    timePlaced = '2020-04-04 12:00:01',
-    address = 'customer001add001area001'
+	address = 'customer001add001area001',
+	timePlaced = '2020-05-04 12:00:01'
 where orderId = 1;
 -- restaurant accepts order
-UPDATE Orders SET
-    status = 'PREPARING'
-where orderId = 1;
 -- FDS assigns rider
 -- rider accepts order
-UPDATE Orders SET
-    riderId = 3,
-    timeRiderAccepts = '2020-04-04 12:05:01'
-where orderId = 1;
+
 -- restaurant finishes preparing order
-UPDATE Orders SET
-    status = 'READY-FOR-DELIVERY'
-where orderId = 1;
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-04-04 12:10:44'
+    timeRiderArrivesRestaurant = '2020-05-04 12:10:44'
 where orderId = 1;
 -- rider leaves restaurant
 UPDATE Orders SET
-    status = 'DELIVERING',
-    timeRiderLeavesRestaurant = '2020-04-04 12:11:01'
+    timeRiderLeavesRestaurant = '2020-05-04 12:11:01'
 where orderId = 1;
--- rider delivers successfully
+
+-- rider arrives at destination
+-- customer pays rider with cash
 UPDATE Orders SET
-    hasPaid = true,
-    status = 'DELIVERED',
-    timeRiderDelivered = '2020-04-04 12:34:01'
+	hasPaid = true
+where orderId = 1;
+
+-- delivery is complete.
+UPDATE Orders SET
+    timeRiderDelivered = '2020-05-04 12:34:01'
 where orderId = 1;
  
 -- customer 2 orders with card
