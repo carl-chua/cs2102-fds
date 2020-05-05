@@ -3,15 +3,7 @@ var router = express.Router();
 
 // connecting to Postgres DB
 const { Pool } = require('pg')
-/* using dotenv below
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: '********',
-  port: 5432,
-})
-*/
+
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });

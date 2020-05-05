@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>CS2102 Starter Guide</title>
+    <title>PandaFood</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -14,8 +14,41 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>CS2102 Starter Guide</h1>
-    <p>Welcome to CS2102 Starter Guide</p><br />
-		<p>by: Adi Yoga S. Prabawa
+    <h1>Welcome to PandaFood</h1>
+    <p>Please login for a yummy time.</p><br />
+			<body>
+		<!--
+			action: the JS file to send data to
+			method: post
+		-->
+		<form id="html_form" action="/" role="form" method="post">
+			<div class="form-group">
+				<label for="email">Email address</label>
+				<input type="text" class="form-control" id="email" name="email" aria-describedby="matricHelp" placeholder="Enter your email address">
+			</div>
+			<div class="form-group">
+				<label for="name">Password</label>
+				<input type="password" class="form-control" id="password" name="password" placeholder="Enter your password">
+			</div>
+
+			<button type="submit" class="btn btn-primary" name="customer" value='1'>Login as customer</button>
+			<button type="submit" class="btn btn-primary" name="rider" value='2'>Login as rider</button>
+			<button type="submit" class="btn btn-primary" name="rstaff" value='2'>Login as restaurant staff</button>
+			<button type="submit" class="btn btn-primary" name="manager" value='3'>Login as manager</button>
+		</form>
+		<!--
+		<script>
+			(function() {
+				window.addEventListener('load', function() {
+					var forms = [document.getElementById('html_form')];
+					var validation = Array.prototype.filter.call(forms, function(form) {
+						// the check function comes from insertScript.js
+						form.addEventListener('submit', check, false);
+					});
+				}, false);
+			})();
+		</script>
+		-->
+  </body>
   </body>
 </html>
