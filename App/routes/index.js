@@ -28,32 +28,53 @@ router.post('/', function(req, res, next) {
 	var managerVal = req.body.manager;
 	var staffVal = req.body.rstaff;
 
-	var select_query;
+	var user_query;
 
 	if (customerVal == 1) {
-		select_query = "SELECT name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT customerId FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (riderVal == 2) {
-		select_query = "SELECT name FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT riderId FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (staffVal == 3) {
-		select_query = "SELECT name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT restaurantStaffId FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (managerVal == 4) {
-		select_query = "SELECT name FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT FDSManagerId FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 
-	console.log(riderVal);
-
-
 	// Construct Specific SQL Query
-	pool.query(select_query, (err, data) => {
-		var get_restaurants = "SELECT R.restaurantId, R.name AS rname, FMI.itemId, FMI.name as iname, FMI.price, FMI.category, FMI.rating FROM Restaurants R JOIN FoodMenuItems FMI ON (R.restaurantId = FMI.restaurantId) WHERE FMI.isSelling = TRUE AND FMI.isAvailableToday = TRUE ORDER BY R.restaurantId;";
-		pool.query(get_restaurants, (err, data2) => {
-			res.render('customerHomePage', {userData: data.rows, foodData: data2.rows});
-		})
+	pool.query(user_query, (err, data) => {
+		// do error handling if possible
+		if (customerVal == 1) {
+			res.redirect('/customerHomePage/?user=' + data.rows[0].customerid);
+		}
+		else if (riderVal == 2) {
+			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);
+		}
+		else if (staffVal == 3) {
+			res.redirect('/staffHomePage/?user=' + data.rows[0].restaurantstaffid);
+		}
+		else if (managerVal == 4) {
+			res.redirect('/managerHomePage/?user=' + data.rows[0].fdsmanagerid);
+		}		
 	});
 	
 });
+
+/*
+	if (req.query.user == 1) {
+		user_query = "SELECT name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (req.query.user == 2) {
+		user_query = "SELECT name FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (req.query.user == 3) {
+		user_query = "SELECT name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (req.quer.user == 4) {
+		user_query = "SELECT name FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+ */
 
 module.exports = router;
