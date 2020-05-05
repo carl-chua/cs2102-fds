@@ -457,7 +457,7 @@ BEGIN
 
 	IF status <> 'DELIVERED' THEN 
 		RAISE exception 'Review can only be created when order is completed';
-	END IF
+	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
