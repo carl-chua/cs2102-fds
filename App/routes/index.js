@@ -25,14 +25,29 @@ router.post('/', function(req, res, next) {
 	var password = req.body.password;
 	var customerVal = req.body.customer;
 	var riderVal = req.body.rider;
+	var managerVal = req.body.manager;
+	var staffVal = req.body.rstaff;
+
+	var select_query;
+
+	if (customerVal == 1) {
+		select_query = "SELECT name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (riderVal == 2) {
+		select_query = "SELECT name FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (staffVal == 3) {
+		select_query = "SELECT name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
+	else if (managerVal == 4) {
+		select_query = "SELECT name FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
+	}
 
 	console.log(riderVal);
 
+
 	// Construct Specific SQL Query
-	var insert_query = "SELECT name FROM Customers WHERE email = '" + email + "';";
-	console.log(insert_query);
-	
-	pool.query(insert_query, (err, data) => {
+	pool.query(select_query, (err, data) => {
 		res.render('customerHomePage', {data: data.rows})
 	});
 	
