@@ -22,16 +22,20 @@
 					<th scope="col">Restaurant</th>
 					<th scope="col">Item</th>
 					<th scope="col">Price</th>
-					<th scope="col">Select</th>
+					<th scope="col">Quantity selected</th>
+					<th scope="col">Total item price</th>
+					<th scope="col">Remove</th>
 					<th scope="col">Quantity</th>
 				</tr>
 			</thead>
 			<tbody>
-				<% for(var i=0; i<foodData.length; i++) { %>
+				<% for(var i=0; i<picksData.length; i++) { %>
 				<tr>
-					<td><%= foodData[i].rname%></td>
-					<td><%= foodData[i].iname%></td>
-					<td><%= foodData[i].price%></td>
+					<td><%= picksData[i].rname%></td>
+					<td><%= picksData[i].iname%></td>
+					<td><%= picksData[i].price%></td>
+					<td><%= picksData[i].qtyordered%></td>
+					<td><%= picksData[i].sumprice%></td>
 					<td><button type="submit" class="btn btn-primary" name="customer" value='1'>Select</button></td>
 					<td><input type="number" min="1" step="1"></td>
 				</tr>
