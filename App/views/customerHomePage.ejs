@@ -15,6 +15,7 @@
   </head>
   <body>
   	<h1>Welcome, <%= userData[0].name%></h1>
+  	<br />
   	<h2>Your chosen items:</h2>
   	<table class="table">
   		<thead>
@@ -31,13 +32,15 @@
 			<tbody>
 				<% for(var i=0; i<picksData.length; i++) { %>
 				<tr>
+					<form id="html_form" action="/customerHomePage" role="form" method="post">
 					<td><%= picksData[i].rname%></td>
 					<td><%= picksData[i].iname%></td>
 					<td><%= picksData[i].price%></td>
 					<td><%= picksData[i].qtyordered%></td>
 					<td><%= picksData[i].sumprice%></td>
-					<td><button type="submit" class="btn btn-primary" name="customer" value='1'>Select</button></td>
-					<td><input type="number" min="1" step="1"></td>
+					<td><button type="submit" class="btn btn-primary" name="remove" value='<%= picksData[i].itemid%>'>Remove</button></td>
+					<td><input type="number" name="removeQty" min="1" step="1"></td>
+					</form>
 				</tr>
 				<% } %>
 			</tbody>
@@ -58,13 +61,15 @@
 			<tbody>
 				<% for(var i=0; i<foodData.length; i++) { %>
 				<tr>
+					<form id="html_form" action="/customerHomePage" role="form" method="post">
 					<td><%= foodData[i].rname%></td>
 					<td><%= foodData[i].iname%></td>
 					<td><%= foodData[i].price%></td>
 					<td><%= foodData[i].category%></td>
 					<td><%= foodData[i].rating%></td>
-					<td><button type="submit" class="btn btn-primary" name="customer" value='1'>Select</button></td>
-					<td><input type="number" min="1" step="1"></td>
+					<td><button type="submit" class="btn btn-primary" name="add" value='<%= foodData[i].itemid%>'>Select</button></td>
+					<td><input type="number" name="submitQty" min="1" step="1"></td>
+				</form>
 				</tr>
 				<% } %>
 			</tbody>
