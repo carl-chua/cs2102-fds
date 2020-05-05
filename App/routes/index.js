@@ -48,7 +48,10 @@ router.post('/', function(req, res, next) {
 
 	// Construct Specific SQL Query
 	pool.query(select_query, (err, data) => {
-		res.render('customerHomePage', {data: data.rows})
+		var get_restaurants = "SELECT R.restaurantId, R.name AS rname, FMI.itemId, FMI.name as iname, FMI.price, FMI.category, FMI.rating FROM Restaurants R JOIN FoodMenuItems FMI ON (R.restaurantId = FMI.restaurantId) WHERE FMI.isSelling = TRUE AND FMI.isAvailableToday = TRUE ORDER BY R.restaurantId;";
+		pool.query(get_restaurants, (err, data2) => {
+			res.render('customerHomePage', {userData: data.rows, foodData: data2.rows});
+		})
 	});
 	
 });

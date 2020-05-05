@@ -14,5 +14,65 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </head>
   <body>
-  	<h1>Welcome, <%= data[0].name%></h1>
+  	<h1>Welcome, <%= userData[0].name%></h1>
+  	<h2>Your chosen items:</h2>
+  	<table class="table">
+  		<thead>
+				<tr>
+					<th scope="col">Restaurant</th>
+					<th scope="col">Item</th>
+					<th scope="col">Price</th>
+					<th scope="col">Select</th>
+					<th scope="col">Quantity</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(var i=0; i<foodData.length; i++) { %>
+				<tr>
+					<td><%= foodData[i].rname%></td>
+					<td><%= foodData[i].iname%></td>
+					<td><%= foodData[i].price%></td>
+					<td><button type="submit" class="btn btn-primary" name="customer" value='1'>Select</button></td>
+					<td><input type="number" min="1" step="1"></td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+  	<h2>Select more items:</h2><br />
+  	<table class="table">
+			<thead>
+				<tr>
+					<th scope="col">Restaurant</th>
+					<th scope="col">Item</th>
+					<th scope="col">Price</th>
+					<th scope="col">Category</th>
+					<th scope="col">Rating</th>
+					<th scope="col">Select</th>
+					<th scope="col">Quantity</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(var i=0; i<foodData.length; i++) { %>
+				<tr>
+					<td><%= foodData[i].rname%></td>
+					<td><%= foodData[i].iname%></td>
+					<td><%= foodData[i].price%></td>
+					<td><%= foodData[i].category%></td>
+					<td><%= foodData[i].rating%></td>
+					<td><button type="submit" class="btn btn-primary" name="customer" value='1'>Select</button></td>
+					<td><input type="number" min="1" step="1"></td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+
+  	<!-- show current (empty) picks table -->
+  	<!-- show restaurants table -->
+  	<!-- select a restaurant from table to show another table of all that restaurant's food items -->
+  	<!-- some checkboxes/type fields for paying by card, card number, address, etc... below -->
+
+  	<!-- OR just all restaurants' all food items in one giant table, easier -->
+  	<!-- can group by restaurant name for making it easier -->
+  	<!-- some checkboxes/type fields for paying by card, card number, address, etc... below -->
+  	<!-- one picks table for all chosen items -->
   </body>
