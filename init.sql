@@ -509,7 +509,7 @@ CREATE TRIGGER existing_schedule_trigger
 CREATE OR REPLACE FUNCTION check_date_validity() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.scheduleType = 'MONTHLY' THEN
-		IF NEW.endDate::DATE - NEW.startDate::DATE < 28 OR NEW.endDate::DATE - NEW.startDate::DATE > 31 THEN
+		IF NEW.endDate::DATE - NEW.startDate::DATE < 26 OR NEW.endDate::DATE - NEW.startDate::DATE > 31 THEN
 			RAISE exception 'Please select a schedule for a 1-month period.';
 		END IF;
 	ELSIF NEW.scheduleType = 'WEEKLY' THEN
@@ -610,7 +610,7 @@ BEGIN
 	FROM PromotionalCampaigns PC 
 	WHERE PC.promoCode = NEW.promoCode;
 
-	IF endDateTime < NOW()::timestamp THEN
+	IF endDateTime < NEW.timePlaced THEN
 		-- cannot update isActive here as exception is raised.
 		RAISE exception 'This code is no longer valid.';
 	ELSIF isActive = FALSE THEN
@@ -704,11 +704,11 @@ BEGIN
 			RAISE exception 'This code is no longer valid for your account.';
 		END IF;
 	ELSIF promoApplicableFor = 'MAX-DAYS-SINCE-LAST-ORDER' THEN
-		IF NOW()::DATE - timeLastOrderPlaced::DATE > daysSinceLastOrder OR timeLastOrderPlaced IS NULL THEN
+		IF NEW.timePlaced::DATE - timeLastOrderPlaced::DATE > daysSinceLastOrder OR timeLastOrderPlaced IS NULL THEN
 			RAISE exception 'This code is no longer valid for your order.';
 		END IF;
 	ELSIF promoApplicableFor = 'MIN-DAYS-SINCE-LAST-ORDER' THEN
-		IF NOW()::DATE - timeLastOrderPlaced::DATE < daysSinceLastOrder THEN
+		IF NEW.timePlaced::DATE - timeLastOrderPlaced::DATE < daysSinceLastOrder THEN
 			RAISE exception 'This code does not apply to your order.';
 		END IF;
 	END IF;
@@ -789,10 +789,11 @@ DECLARE
 BEGIN
 	SELECT DR.riderId, S.feePerDelivery INTO riderChosenId, deliveryFee
 	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
-						   JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
-						   LEFT JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
+						   LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
+						   FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
 	WHERE DR.isAvailable = TRUE
-	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE) - 1][EXTRACT(HOUR FROM NEW.timePlaced) - 10] = TRUE)
+	AND (S.startDate <= NEW.timePlaced AND S.endDate >= NEW.timePlaced)
+	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE)][EXTRACT(HOUR FROM NEW.timePlaced) - 9] = TRUE)
 	OR (S.scheduleType = 'MONTHLY' AND CASE
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 1 THEN MWS.monShift
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 2 THEN MWS.tueShift
@@ -802,13 +803,16 @@ BEGIN
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 6 THEN MWS.satShift
 										    WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 7 THEN MWS.sunShift
 										END
-									= CASE
-											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 10 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 14) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 15 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 19)) THEN 1
-											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 11 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 15) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 16 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 20)) THEN 2
-											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 12 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 16) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 17 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 21)) THEN 3
-											WHEN ((EXTRACT(HOUR FROM NEW.timePlaced) >= 13 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 17) OR (EXTRACT(HOUR FROM NEW.timePlaced) >= 18 AND EXTRACT(HOUR FROM NEW.timePlaced) <= 22)) THEN 4
+									= ANY(CASE
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 10) THEN ARRAY[1]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 11) THEN ARRAY[1,2]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 12) THEN ARRAY[1,2,3]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) BETWEEN 13 AND 19) THEN ARRAY[1,2,3,4]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 20) THEN ARRAY[2,3,4]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 21) THEN ARRAY[3,4]
+											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 22) THEN ARRAY[4]
 		
-										END))
+										END)))
 	LIMIT 1;
 
 	IF riderChosenId IS NULL THEN
@@ -1080,13 +1084,13 @@ values
 
 INSERT INTO Schedules
 values
-(1,1,'2020-05-01','2020-06-01','2020-06-04','MONTHLY',2,532,1500),
-(2,2,'2020-05-02','2020-06-02','2020-06-10','MONTHLY',2,467,1500),
-(3,3,'2020-05-07','2020-06-05','2020-06-06','MONTHLY',2,486,1500),
-(4,4,'2020-05-09','2020-06-07','2020-06-08','MONTHLY',2,521,1500),
-(5,5,'2020-05-03','2020-06-01','2020-06-03','MONTHLY',2,509,1500),
-(6,6,'2020-05-03','2020-06-01','2020-06-03','MONTHLY',2,503,1500),
-(7,7,'2020-05-04','2020-06-02','2020-06-04','MONTHLY',2,498,1500);
+(1,1,'2020-05-04','2020-05-31','2020-06-02','MONTHLY',2,532,1500),
+(2,2,'2020-05-05','2020-06-01','2020-06-03','MONTHLY',2,467,1500),
+(3,3,'2020-05-06','2020-06-02','2020-06-04','MONTHLY',2,486,1500),
+(4,4,'2020-05-04','2020-05-31','2020-06-01','MONTHLY',2,521,1500),
+(5,5,'2020-05-04','2020-05-31','2020-06-03','MONTHLY',2,509,1500),
+(6,6,'2020-05-04','2020-05-31','2020-06-03','MONTHLY',2,503,1500),
+(7,7,'2020-05-04','2020-05-31','2020-06-02','MONTHLY',2,498,1500);
 
 INSERT INTO MonthlyWorkSchedules
 values
@@ -1100,9 +1104,9 @@ values
 
 INSERT INTO Schedules
 values
-(8, 8, '2020-05-05', '2020-05-12', '2020-05-14', 'WEEKLY', 2, 145, 1500),
+(8, 8, '2020-05-04', '2020-05-11', '2020-05-14', 'WEEKLY', 2, 145, 1500),
 (9, 9, '2020-05-06', '2020-05-13', '2020-05-15', 'WEEKLY', 2, 150, 1500),
-(10, 10, '2020-05-03', '2020-05-10', '2020-05-12', 'WEEKLY', 2, 143, 1500);
+(10, 10, '2020-05-04', '2020-05-11', '2020-05-12', 'WEEKLY', 2, 143, 1500);
 
 INSERT INTO WeeklyWorkSchedules
 values
@@ -1258,7 +1262,7 @@ INSERT INTO Locations values
 -- order placed
 UPDATE Orders SET
 	address = 'customer001add001area001',
-	timePlaced = '2020-05-04 12:00:01'
+	timePlaced = '2020-05-05 12:00:01'
 where orderId = 1;
 -- restaurant accepts order
 -- FDS assigns rider
@@ -1267,11 +1271,11 @@ where orderId = 1;
 -- restaurant finishes preparing order
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-05-04 12:10:44'
+    timeRiderArrivesRestaurant = '2020-05-05 12:10:44'
 where orderId = 1;
 -- rider leaves restaurant
 UPDATE Orders SET
-    timeRiderLeavesRestaurant = '2020-05-04 12:11:01'
+    timeRiderLeavesRestaurant = '2020-05-05 12:11:01'
 where orderId = 1;
 
 -- rider arrives at destination
@@ -1282,9 +1286,14 @@ where orderId = 1;
 
 -- delivery is complete.
 UPDATE Orders SET
-    timeRiderDelivered = '2020-05-04 12:34:01'
+    timeRiderDelivered = '2020-05-05 12:34:01'
 where orderId = 1;
- 
+/*
+-- select a different delivery rider, just for variety of data
+UPDATE Orders SET
+	riderId = 3
+where orderId = 1;
+ */
 -- customer 2 orders with card
 INSERT INTO Picks values 
 (2, 15, 2),
@@ -1296,39 +1305,32 @@ UPDATE Customers SET
 where CustomerId = 2;
 -- customer places order
 UPDATE Orders SET
-    status = 'PENDING',
     paymentCardNoIfUsed = 'customer002card001',
-    timePlaced = '2020-04-04 12:10:01',
+    timePlaced = '2020-05-04 12:10:01',
     hasPaid = true,
     address = 'customer002add001area004'
 where orderId = 2;
 -- restaurant accepts order
-UPDATE Orders SET
-    status = 'PREPARING'
-where orderId = 2;
+
 -- FDS assigns rider
 -- rider accepts order
-UPDATE Orders SET
-    riderId = 8,
-    timeRiderAccepts = '2020-04-04 12:11:01'
-where orderId = 2;
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-04-04 12:18:44'
+    timeRiderArrivesRestaurant = '2020-05-04 12:18:44'
 where orderId = 2;
 -- restaurant finishes preparing order
-UPDATE Orders SET
-    status = 'READY-FOR-DELIVERY'
-where orderId = 2;
 -- rider leaves restaurant
 UPDATE Orders SET
-    status = 'DELIVERING',
-    timeRiderLeavesRestaurant = '2020-04-04 12:22:01'
+    timeRiderLeavesRestaurant = '2020-05-04 12:22:01'
 where orderId = 2;
 -- rider delivers successfully
 UPDATE Orders SET
-    status = 'DELIVERED',
-    timeRiderDelivered = '2020-04-04 12:30:01'
+    timeRiderDelivered = '2020-05-04 12:30:01'
+where orderId = 2;
+
+-- select a different delivery rider, just for variety of data
+UPDATE Orders SET
+	riderId = 8
 where orderId = 2;
  
 -- customer 3 orders with cash
@@ -1344,39 +1346,27 @@ INSERT INTO Locations values
 -- customer places order
 UPDATE Orders SET
 -- promo discount applied by trigger
-    status = 'PENDING',
+    timePlaced = '2020-05-06 12:10:01',
     promoCode = 'R003-2DOLLAROFF-FIRSTACCOUNT',
-    timePlaced = '2020-04-06 12:10:01',
     address = 'customer003add001area004'
 where orderId = 3;
 -- restaurant accepts order
-UPDATE Orders SET
-    status = 'PREPARING'
-where orderId = 3;
 -- FDS assigns rider
 -- rider accepts order
-UPDATE Orders SET
-    riderId = 6,
-    timeRiderAccepts = '2020-04-06 12:11:01'
-where orderId = 3;
+
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-04-06 12:18:44'
+    timeRiderArrivesRestaurant = '2020-05-06 12:18:44'
 where orderId = 3;
 -- restaurant finishes preparing order
-UPDATE Orders SET
-    status = 'READY-FOR-DELIVERY'
-where orderId = 3;
 -- rider leaves restaurant
 UPDATE Orders SET
-    status = 'DELIVERING',
-    timeRiderLeavesRestaurant = '2020-04-06 12:22:01'
+    timeRiderLeavesRestaurant = '2020-05-06 12:22:01'
 where orderId = 3;
 -- rider delivers successfully
 UPDATE Orders SET
     hasPaid = true,
-    status = 'DELIVERED',
-    timeRiderDelivered = '2020-04-06 12:30:01'
+    timeRiderDelivered = '2020-05-06 12:30:01'
 where orderId = 3;
  
 INSERT INTO Picks values 
@@ -1390,39 +1380,27 @@ INSERT INTO Locations values
 -- customer places order
 UPDATE Orders SET
 -- promo discount applied by trigger
-    status = 'PENDING',
     promoCode = 'R004-0.5DOLLAROFF-ITEM003-ALL',
-    timePlaced = '2020-03-31 12:10:01',
+    timePlaced = '2020-04-30 12:10:01',
     address = 'customer004add001area001'
 where orderId = 4;
 -- restaurant accepts order
-UPDATE Orders SET
-    status = 'PREPARING'
-where orderId = 4;
 -- FDS assigns rider
 -- rider accepts order
-UPDATE Orders SET
-    riderId = 2,
-    timeRiderAccepts = '2020-03-31 12:11:01'
-where orderId = 4;
+
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-03-31 12:18:44'
+    timeRiderArrivesRestaurant = '2020-04-30 12:18:44'
 where orderId = 4;
--- restaurant finishes preparing order
-UPDATE Orders SET
-    status = 'READY-FOR-DELIVERY'
-where orderId = 4;
+
 -- rider leaves restaurant
 UPDATE Orders SET
-    status = 'DELIVERING',
-    timeRiderLeavesRestaurant = '2020-03-31 12:22:01'
+    timeRiderLeavesRestaurant = '2020-04-30 12:22:01'
 where orderId = 4;
 -- rider delivers successfully
 UPDATE Orders SET
     hasPaid = true,
-    status = 'DELIVERED',
-    timeRiderDelivered = '2020-03-31 12:30:01'
+    timeRiderDelivered = '2020-04-30 12:30:01'
 where orderId = 4;
 
 -- Customer 5 pays card
@@ -1437,38 +1415,27 @@ UPDATE Customers SET
 where CustomerId = 5;
 -- customer places order
 UPDATE Orders SET
-    status = 'PENDING',
     promoCode = 'R001-50PERCENTOFF-ALL',
     paymentCardNoIfUsed = 'customer005card001',
-    timePlaced = '2020-04-01 12:10:01',
+    timePlaced = '2020-05-04 12:10:01',
     hasPaid = true,
     address = 'customer005add001area005'
 where orderId = 5;
 -- restaurant accepts order
-UPDATE Orders SET
-    status = 'PREPARING'
-where orderId = 5;
 -- FDS assigns rider
 -- rider accepts order
-UPDATE Orders SET
-    riderId = 1,
-    timeRiderAccepts = '2020-04-01 12:11:01'
-where orderId = 5;
+
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-04-01 12:18:44'
+    timeRiderArrivesRestaurant = '2020-05-04 12:18:44'
 where orderId = 5;
 -- restaurant finishes preparing order
-UPDATE Orders SET
-    status = 'READY-FOR-DELIVERY'
-where orderId = 5;
+
 -- rider leaves restaurant
 UPDATE Orders SET
-    status = 'DELIVERING',
-    timeRiderLeavesRestaurant = '2020-04-01 12:22:01'
+    timeRiderLeavesRestaurant = '2020-05-04 12:22:01'
 where orderId = 5;
 -- rider delivers successfully
 UPDATE Orders SET
-    status = 'DELIVERED',
-    timeRiderDelivered = '2020-04-01 12:30:01'
+    timeRiderDelivered = '2020-05-04 12:30:01'
 where orderId = 5;
