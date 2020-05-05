@@ -165,10 +165,10 @@ CREATE TABLE DeliveryRiders (
 
 -- final implementation:
 -- no way to schedule a time-based trigger in Postgres.
--- 1 can instead be checked when querying for the rider (if currentTime.hour in rider's working hours)
+-- 1 can instead be implemented by using application logic to query for all riders every hour (check if currentTime.hour in rider's working hours)
+-- use JS to determine if current hour in rider's working hours; if rider not supposed to be working, turn isAvailable off
 -- a trigger is written for 2
 -- 3 can be implemented by querying for all riders available in the current hour, and checking if that number > 5.
--- isAvailable is thus superfluous
 
 CREATE TABLE Shifts (
     shiftId integer,
@@ -740,6 +740,110 @@ CREATE TRIGGER code_valuation_trigger
 	BEFORE UPDATE OF promoCode ON Orders
 	FOR EACH ROW
 	EXECUTE FUNCTION code_valuation();
+
+-- 4. before/when adding timePlaced, check for:
+	-- a. non-null address (ensure customer has placed address) 
+	-- b. hasPaid (if paying by card - paymentCardNoIfUsed)
+	-- c. check if order exceeds restaurant's minSpend for each restaurant
+CREATE OR REPLACE FUNCTION order_details_check() RETURNS TRIGGER AS $$
+DECLARE
+	restaurantsUnderspent integer;
+BEGIN
+	SELECT count(DISTINCT R.restaurantId) INTO restaurantsUnderspent
+	FROM FoodMenuItems FMI JOIN Picks P ON (P.orderId = NEW.orderId AND P.itemId = FMI.itemId)
+					       JOIN Restaurants R ON (R.restaurantId = FMI.restaurantId)
+	GROUP BY R.restaurantId, R.minSpend
+	HAVING SUM(P.qtyOrdered * FMI.price) < R.minSpend;
+
+	IF restaurantsUnderspent > 0 THEN
+		RAISE exception 'Your order has not fulfilled the minimum expenditure requirements of all restaurants.';
+	END IF;
+
+	IF NEW.address IS NULL THEN
+		RAISE exception 'Please input your delivery address.';
+	END IF;
+
+	NEW.status = 'PENDING';
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS order_confirmation_trigger ON Orders;
+CREATE TRIGGER order_confirmation_trigger
+	BEFORE UPDATE OF timePlaced ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION order_details_check();
+
+-- 5. upon adding of timePlaced:
+	-- a. update order status enum
+	-- b. allocate riderId and deliveryFee
+		-- set isAvailable for chosen rider (in DeliveryRiders table) to false
+		-- if no riders available, raise error
+CREATE OR REPLACE FUNCTION allocate_rider() RETURNS TRIGGER AS $$
+DECLARE
+	riderChosenId integer;
+	deliveryFee numeric(10, 2);
+	monthlyShift integer;
+BEGIN
+	SELECT DR.riderId, S.feePerDelivery INTO riderChosenId, deliveryFee
+	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
+						   JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
+						   LEFT JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
+	WHERE (S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NOW()::DATE) - 1][EXTRACT(HOUR FROM NOW()) - 10] = TRUE)
+	OR (S.scheduleType = 'MONTHLY' AND CASE
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 1 THEN MWS.monShift
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 2 THEN MWS.tueShift
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 3 THEN MWS.wedShift
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 4 THEN MWS.thuShift
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 5 THEN MWS.friShift
+											WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 6 THEN MWS.satShift
+										    WHEN (EXTRACT(DOW FROM NOW()::DATE)) = 7 THEN MWS.sunShift
+										END
+									= CASE
+											WHEN ((EXTRACT(HOUR FROM NOW()) >= 10 AND EXTRACT(HOUR FROM NOW()) <= 14) OR (EXTRACT(HOUR FROM NOW()) >= 15 AND EXTRACT(HOUR FROM NOW()) <= 19)) THEN 1
+											WHEN ((EXTRACT(HOUR FROM NOW()) >= 11 AND EXTRACT(HOUR FROM NOW()) <= 15) OR (EXTRACT(HOUR FROM NOW()) >= 16 AND EXTRACT(HOUR FROM NOW()) <= 20)) THEN 2
+											WHEN ((EXTRACT(HOUR FROM NOW()) >= 12 AND EXTRACT(HOUR FROM NOW()) <= 16) OR (EXTRACT(HOUR FROM NOW()) >= 17 AND EXTRACT(HOUR FROM NOW()) <= 21)) THEN 3
+											WHEN ((EXTRACT(HOUR FROM NOW()) >= 13 AND EXTRACT(HOUR FROM NOW()) <= 17) OR (EXTRACT(HOUR FROM NOW()) >= 18 AND EXTRACT(HOUR FROM NOW()) <= 22)) THEN 4
+										END)
+	LIMIT 1;
+
+	UPDATE DeliveryRiders
+	SET isAvailable = FALSE
+	WHERE riderId = riderChosenId;
+
+	NEW.riderId = riderChosenId;
+	NEW.deliveryFee = deliveryFee;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS rider_allocation_trigger ON Orders;
+CREATE TRIGGER rider_allocation_trigger
+	BEFORE UPDATE OF timePlaced ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION allocate_rider();
+
+-- c. increment qtyOrderedToday of all food items chosen by 1
+-- d. add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
+CREATE OR REPLACE FUNCTION update_details() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE FoodMenuItems FMI
+	SET qtyOrderedToday = qtyOrderedToday + P.qtyOrdered
+	FROM Picks P
+	WHERE FMI.itemId = P.itemId
+	AND P.orderId = NEW.orderId;
+
+	-- add delivery address to customer IF does not exist
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS time_placed_trigger ON Orders;
+CREATE TRIGGER time_placed_trigger
+	BEFORE UPDATE OF timePlaced ON Orders
+	FOR EACH ROW
+	EXECUTE FUNCTION update_details();
 
 /**
  * Insertion of test data
