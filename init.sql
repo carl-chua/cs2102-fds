@@ -445,8 +445,29 @@ CREATE TABLE FoodReviews (
  * Triggers
  */
 
-/* DeliveryRiders triggers */
+/* Food Review Triggers */
+CREATE OR REPLACE FUNCTION check_valid_review() RETURNS TRIGGER AS $$
+DECLARE
+	status orderStatusEnum;
+BEGIN
+	SELECT O.status INTO status
+	FROM Picks P NATURAL JOIN Orders O
+	WHERE NEW.orderId = P.orderID
+	AND NEW.itemId = P.itemId;
 
+	IF status <> 'DELIVERED' THEN 
+		RAISE exception 'Review can only be created when order is completed';
+	END IF
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS review_validity_trigger ON FoodReviews;
+CREATE TRIGGER review_validity_trigger
+	BEFORE INSERT ON FoodReviews
+	FOR EACH ROW
+	EXECUTE FUNCTION check_valid_review();
+
+/* DeliveryRiders triggers */
 -- if rider isDeleted, make isAvailable false
 CREATE OR REPLACE FUNCTION make_unavailable() RETURNS TRIGGER AS $$
 BEGIN
