@@ -6,11 +6,11 @@ var logger = require("morgan");
 var session = require('express-session');
 
 require("dotenv").config();
-
 var indexRouter = require("./routes/index");
 var customerHomePageRouter = require("./routes/customerHomePage");
 var customerOrderConfirmPageRouter = require("./routes/customerOrderConfirmPage");
 var riderHomePageRouter = require("./routes/riderHomePage");
+var restaurantStaffHomePageRouter = require("./routes/restaurantStaffHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
 var staffHomePageRouter = require("./routes/staffHomePage");
 var viewSchedulesPageRouter = require("./routes/viewSchedulesPage");
@@ -24,6 +24,8 @@ var selectRouter = require("./routes/select");
 var formsRouter = require("./routes/forms");
 var insertRouter = require("./routes/insert");
 var ordersRouter = require("./routes/orders");
+var menuRouter = require("./routes/menu");
+var addItemRouter = require("./routes/addItem");
 
 var app = express();
 
@@ -43,6 +45,7 @@ app.use("/", indexRouter);
 app.use("/customerHomePage", customerHomePageRouter);
 app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
 app.use("/riderHomePage", riderHomePageRouter);
+app.use("/restaurantStaffHomePage", restaurantStaffHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);
 app.use("/viewSchedulesPage", viewSchedulesPageRouter);
@@ -55,6 +58,8 @@ app.use("/loops", loopsRouter);
 app.use("/select", selectRouter);
 app.use("/forms", formsRouter);
 app.use("/orders", ordersRouter);
+app.use("/menu", menuRouter);
+app.use("/addItem", addItemRouter);
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

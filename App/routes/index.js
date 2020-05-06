@@ -37,7 +37,7 @@ router.post('/', function(req, res, next) {
 		user_query = "SELECT riderId FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (staffVal == 3) {
-		user_query = "SELECT restaurantStaffId FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT restaurantStaffId, name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (managerVal == 4) {
 		user_query = "SELECT FDSManagerId FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
@@ -55,7 +55,9 @@ router.post('/', function(req, res, next) {
 			res.redirect('/riderHomePage');
 		}
 		else if (staffVal == 3) {
-			res.redirect('/staffHomePage/?user=' + data.rows[0].restaurantstaffid);
+			req.session.staffId = data.rows[0].restaurantstaffid;
+			req.session.name = data.rows[0].name;
+			res.redirect('restaurantStaffHomePage');
 		}
 		else if (managerVal == 4) {
 			res.redirect('/managerHomePage/?user=' + data.rows[0].fdsmanagerid);

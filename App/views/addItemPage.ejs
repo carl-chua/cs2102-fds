@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+		<!-- Page Title -->
+    <title>Add Item Page</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+		
+		<!-- CSS for Styling -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+		
+		<!-- JavaScript for Interactivity -->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+		<!-- ADDED JavaScript -->
+		<!-- <script src="javascripts/insertScript.js"></script> -->
+  </head>
+  <body>
+	<h1>Add Item</h1>
+		<!--
+			action: the JS file to send data to
+			method: post
+		-->
+		<form id="html_form" action="addItem" role="form" method="post">
+			<div class="form-group">
+				<label for="itemId">Enter Item ID:</label>
+				<input type="text" class="form-control" id="itemId" name="itemId" aria-describedby="itemIdHelp" placeholder="Enter the Item ID">
+            </div>
+            <div class="form-group">
+				<label for="name">Enter Name:</label>
+				<input type="text" class="form-control" id="name" name="name" aria-describedby="nameHelp" placeholder="Enter the name">
+            </div>
+            <div class="form-group">
+				<label for="dailyLimit">Enter Daily Limit:</label>
+				<input type="text" class="form-control" id="dailyLimit" name="dailyLimit" aria-describedby="dailyLimitHelp" placeholder="Enter the Daily Limit">
+            </div>
+            <div class="form-group">
+				<label for="price">Enter Price:</label>
+				<input type="text" class="form-control" id="price" name="price" aria-describedby="priceHelp" placeholder="Enter the price">
+            </div>
+            <div class="form-group">
+				<label for="category">Enter Category:</label>
+				<input type="text" class="form-control" id="category" name="category" aria-describedby="categoryHelp" placeholder="Enter the category">
+            </div>
+            <div class="form-group">
+				<label for="isSelling">Is the item for sale?:</label>
+				<input type="text" class="form-control" id="isSelling" name="isSelling" aria-describedby="isSellingHelp" placeholder="Enter a boolean true/false">
+            </div>
+			<button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+		
+		<!-- <script>
+			(function() {
+				window.addEventListener('load', function() {
+					var forms = [document.getElementById('html_form')];
+					var validation = Array.prototype.filter.call(forms, function(form) {
+						// the check function comes from insertScript.js
+						form.addEventListener('submit', check, false);
+					});
+				}, false);
+			})();
+        </script> -->
+        
+  </body>
+</html>
