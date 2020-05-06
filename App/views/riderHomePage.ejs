@@ -15,4 +15,41 @@
   </head>
   <body>
   	<h1>Welcome, <%= riderData[0].name%></h1>
+  	<h4>Your rating: <%= riderData[0].overallrating %> / 5</h4>
+  	<br />
+  	<br />
+  	<h1>Current orders</h1>
+  	<% if (orderData.length == 0) { %><h4>None</h4> <% } %>
+  	<% if (orderData.length > 0) { %>
+  	<table class="table">
+  		<thead>
+				<tr>
+					<th scope="col">Restaurant</th>
+					<th scope="col">Restaurant address</th>
+					<th scope="col">Delivery address</th>
+					<th scope="col">Customer name</th>
+					<th scope="col">Customer phone number</th>
+					<th scope="col">Time order placed</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(var i=0; i<orderData.length; i++) { %>
+				<tr>
+					<form id="html_form" action="/customerHomePage" role="form" method="post">
+					<% console.log(orderData); %>
+					<td><%= orderData[i].rname%></td>
+					<td><%= orderData[i].raddress%></td>
+					<td><%= orderData[i].caddress%></td>
+					<td><%= orderData[i].cname%></td>
+					<td><%= orderData[i].phonenumber%></td>
+					<td><%= orderData[i].timeplaced%></td>
+					<td><button type="submit" class="btn btn-primary" name="remove" value='<%= orderData[i].itemid%>'>Remove</button></td>
+					<td><input type="number" name="removeQty" min="1" step="1"></td>
+					</form>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+		<% } %>
+
   </body>
