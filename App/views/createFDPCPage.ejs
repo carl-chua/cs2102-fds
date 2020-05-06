@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Page Title -->
+    <title>Create a Food Delivery Promotional Campaign</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+
+    <!-- CSS for Styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <!-- JavaScript for Interactivity -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    <!-- JavaScript for date picker -->
+    <title>jQuery UI Datepicker - Change Date Format Example</title>
+    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/base/jquery-ui.css" rel="stylesheet" />
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"></script>
+</head>
+
+<script>
+    $(document).ready(function () {
+        $('input[id$=tbDate]').datepicker({
+            dateFormat: 'yy-mm-dd'
+        });
+    });
+</script>
+
+<body>
+    <h1>Create a Food Delivery Promotional Campaign</h1>
+    <p>Please enter Food Delivery Promotional Campaign details!</p><br />
+
+    <body>
+        <!--
+			in form tag,
+			action: the JS file to send data to
+			method: post
+		-->
+        <form id="html_form" action="/createFDPCPage" role="form" method="post">
+            <div class="form-group">
+                <label for="promoCode">Promo Code</label>
+                <input type="text" class="form-control" id="promoCode" name="promoCode" aria-describedby="matricHelp"
+                    placeholder="Enter desired Promo Code">
+            </div>
+
+            <div class="form-group">
+                <label for="endDateTime">Expiry Date</label>
+                <br />
+                <!--
+                    <input type="text" class="form-control" id="endDateTime" name="endDateTime"
+                    placeholder="Enter expiry date of promotion">
+                -->
+                <input type="text" id="tbDate" name="endDateTime">
+            </div>
+
+            <div class="form-group">
+                <label for="discountType">Discount Type</label>
+                <fieldset>
+                    <select id="discountType" name="discountType">
+                        <option value='PERCENT'>PERCENT</option>
+                        <option value='DOLLAR'>DOLLAR</option>
+                        <option value='FREE-DELIVERY'>FREE-DELIVERY</option>
+                    </select>
+                </fieldset>
+            </div>
+
+            <div class="form-group">
+                <label for="discount">Discount Variable</label>
+                <input type="text" class="form-control" id="discount" name="discount"
+                    placeholder="If PERCENT discount type, enter numeric discount percentage (e.g. 15, meaning 15% discount), if DOLLAR discount type, enter dollar discount (e.g. 3, meaning a 3 dollar discount), else leave empty">
+            </div>
+
+            <div class="form-group">
+                <label for="minSpend">Minimum spend amount</label>
+                <input type="text" class="form-control" id="minSpend" name="minSpend"
+                    placeholder="If there's a minimum spend requirement, enter minimum spend amount (e.g. 10, meaning a 10 dollar minimum spend), else leave empty">
+            </div>
+
+            <div class="form-group">
+                <label for="promoApplicableFor">Promotion applicable for</label>
+                <fieldset>
+                    <select id="promoApplicableFor" name="promoApplicableFor">
+                        <option value='ALL-CUSTOMERS'>ALL-CUSTOMERS</option>
+                        <option value='ONLY-FOR-FIRST-ACCOUNT-ORDER'>ONLY-FOR-FIRST-ACCOUNT-ORDER</option>
+                        <option value='MAX-DAYS-SINCE-LAST-ORDER'>MAX-DAYS-SINCE-LAST-ORDER</option>
+                        <option value='MIN-DAYS-SINCE-LAST-ORDER'>MIN-DAYS-SINCE-LAST-ORDER</option>
+                    </select>
+                </fieldset>
+            </div>
+
+            <div class="form-group">
+                <label for="daysSinceLastOrder">Number of days</label>
+                <input type="text" class="form-control" id="daysSinceLastOrder" name="daysSinceLastOrder"
+                    placeholder="If field above is either MAX or MIN DAYS SINCE LAST ORDER, enter a numeric number of days">
+            </div>
+
+            <button type="submit" class="btn btn-primary" name="createdFDPC" value='1'>Create FDPC</button>
+        </form>
+    </body>
+</body>
+
+</html>

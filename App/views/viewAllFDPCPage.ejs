@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Page Title -->
+    <title>Food Delivery Service Manager Home Page</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+
+    <!-- CSS for Styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <!-- JavaScript for Interactivity -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h1>All Food Delivery Promotional Campaigns</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">PromoCode</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+                <th scope="col">Promo Type</th>
+                <th scope="col">Discount Type</th>
+                <th scope="col">Discount</th>
+                <th scope="col">Minimum Amount Spent</th>
+                <th scope="col">Applicable To</th>
+                <th scope="col">Days Since Last Order</th>
+                <th scope="col">Active?</th>
+                <th scope="col">Creating Manager</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<FDPCData.length; i++) { %>
+            <tr>
+                <td><%= FDPCData[i].promocode%></td>
+                <td><%= FDPCData[i].startdatetime%></td>
+                <td><%= FDPCData[i].enddatetime%></td>
+                <td><%= FDPCData[i].promotype%></td>
+                <td><%= FDPCData[i].discounttype%></td>
+                <td><%= FDPCData[i].discount%></td>
+                <td><%= FDPCData[i].minspend%></td>
+                <td><%= FDPCData[i].promoapplicablefor%></td>
+                <td><%= FDPCData[i].dayssincelastorder%></td>
+                <td><%= FDPCData[i].isactive%></td>
+                <td><%= FDPCData[i].FDSManagerId%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+</body>

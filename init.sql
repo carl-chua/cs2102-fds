@@ -68,7 +68,7 @@ CREATE TYPE scheduleTypeEnum as ENUM (
 
 CREATE TABLE PromotionalCampaigns (
 	promoCode varchar,
-	startDateTime timestamp not null,
+	startDateTime timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 	endDateTime timestamp not null check (endDateTime > startDateTime),
 	promoType promoTypeEnum not null,
     discountType discountTypeEnum not null,

@@ -3,7 +3,7 @@
 
 <head>
   <!-- Page Title -->
-  <title>Food Delivery Service Manager Home Page</title>
+  <title>Statistics</title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
 
   <!-- CSS for Styling -->
@@ -23,18 +23,19 @@
 </head>
 
 <body>
-  <h1>Welcome, <%= userData[0].name%></h1>
+  <h1>Statistics</h1>
   <br />
   <br />
-  <form id="html_form" action="/managerHomePage" role="form" method="post">
-    <button type="submit" class="btn btn-primary" name="navigation" value='1'>View all Food Delivery Promotional
-      Campaign</button>
+  <form id="html_form" action="/viewStatisticsHomePage" role="form" method="post">
+    <button type="submit" class="btn btn-primary" name="navigation" value='1'>View number of new customers, total number of orders and total cost of orders per month</button>
     <br />
     <br />
-    <button type="submit" class="btn btn-primary" name="navigation" value='2'>Create Food Delivery Promotional
-      Campaign</button>
+    <button type="submit" class="btn btn-primary" name="navigation" value='2'>View total number of orders and total cost of orders per month for every customer</button>
     <br />
     <br />
-    <button type="submit" class="btn btn-primary" name="navigation" value='3'>View Statistics</button>
+    <button type="submit" class="btn btn-primary" name="navigation" value='3'>View total number of orders placed at a location per hour</button>
+    <br />
+    <br />
+    <button type="submit" class="btn btn-primary" name="navigation" value='4'>View driver statistics</button>
   </form>
 </body>

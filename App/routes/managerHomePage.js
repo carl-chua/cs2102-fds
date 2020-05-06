@@ -10,9 +10,29 @@ const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
 
-/* GET users listing. */
+var managerId = null;
+
+/* GET manager name listing. */
 router.get('/', function(req, res, next) {
-  res.render('customerHomePage', { title: 'Express' });
+  // req.query.user is passed in from index.js
+  managerId = req.query.user;
+  var user_query = "SELECT * FROM FoodDeliveryServiceManagers WHERE FDSManagerId = '" + managerId + "';";
+  pool.query(user_query, (err, userData) => {
+    console.log(err);
+    res.render('managerHomePage', { userData: userData.rows });
+  });
+});
+
+// Handling navigation to other pages
+router.post('/', function(req, res, next) {
+  var navigation = req.body.navigation;
+  if (navigation == '1') {
+    res.redirect('/viewAllFDPCPage');
+  } else if (navigation == '2') {
+    res.redirect('/createFDPCPage/?user=' + managerId);
+  } else {
+    res.redirect('/viewStatisticsHomePage');
+  }
 });
 
 module.exports = router;

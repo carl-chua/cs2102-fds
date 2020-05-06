@@ -20,6 +20,9 @@ var selectRouter = require("./routes/select");
 var formsRouter = require("./routes/forms");
 var insertRouter = require("./routes/insert");
 var ordersRouter = require("./routes/orders");
+var viewAllFDPCPageRouter = require("./routes/viewAllFDPCPage");
+var createFDPCPageRouter = require("./routes/createFDPCPage");
+var viewStatisticsHomePageRouter = require("./routes/viewStatisticsHomePage");
 
 var app = express();
 
@@ -46,6 +49,9 @@ app.use("/loops", loopsRouter);
 app.use("/select", selectRouter);
 app.use("/forms", formsRouter);
 app.use("/orders", ordersRouter);
+app.use("/viewAllFDPCPage", viewAllFDPCPageRouter);
+app.use("/createFDPCPage", createFDPCPageRouter);
+app.use("/viewStatisticsHomePage", viewStatisticsHomePageRouter);
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
