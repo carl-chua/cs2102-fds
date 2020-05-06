@@ -8,9 +8,6 @@ const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
 
-/* SQL Query */
-var sql_query = 'SELECT ';
-
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -47,7 +44,7 @@ router.post('/', function(req, res, next) {
 	pool.query(user_query, (err, data) => {
 		// do error handling if possible
 		if (customerVal == 1) {
-			res.redirect('/customerHomePage/?user=' + data.rows[0].customerid);
+			res.redirect('/customerHomePage/?user=3' + data.rows[0].customerid);
 		}
 		else if (riderVal == 2) {
 			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);
