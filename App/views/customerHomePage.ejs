@@ -49,55 +49,29 @@
 		<% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
 		<h5>Total price: $<%= j %></h5>
 		<form id="html_form" action="/customerHomePage" role="form" method="post">
-		<button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
+			<button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
 		</form>
 		<br />
 		<br />
-		<h2>Select more items:</h2>
+		<h2>Pick a restaurant!</h2>
 		<br />
-
-		<div class="card-columns">
-			<div class="card" >
-				<img class="card-img-top" src="/images/restaurant.jpg" class="img-fluid" alt="Card image cap">
-				<div class="card-body">
-				<h4 class="card-text"># RESTAURANT NAME #</h4>
+		<div class="card-columns" id="restaurantPanel">
+			<form id="restaurantForm" role="form" method="post">
+				<% for (var i=0; i<restaurants.length; i++) { %>
+				<div class="card" >
+					<!-- <a class="card-block stretched-link text-decoration-none" 
+						type="submit" name="restaurantIdPicked" 
+						value="<%= restaurants[i].restaurantid %>" href="#"> -->
+						<img class="card-img-top" src="/images/restaurant.jpg" alt="Card image cap">
+						<div class="card-body">
+							<h4 class="card-text"><%= restaurants[i].rname %></h4>
+							<button type="submit" name="restaurantIdPicked" 
+								value="<%= restaurants[i].restaurantid %>" 
+								class="card-text stretched-link">GO!</button>
+						</div>
+					</a>
 				</div>
-			</div>
-			<div class="card" >
-				<img class="card-img-top" src="/images/restaurant.jpg" class="img-fluid" alt="Card image cap">
-				<div class="card-body">
-				<h4 class="card-text"># RESTAURANT NAME #</h4>
-				</div>
-			</div>
-		</div>
-
-  	<table class="table">
-			<thead>
-				<tr>
-					<th scope="col">Restaurant</th>
-					<th scope="col">Item</th>
-					<th scope="col">Price</th>
-					<th scope="col">Category</th>
-					<th scope="col">Rating</th>
-					<th scope="col">Select</th>
-					<th scope="col">Quantity</th>
-				</tr>
-			</thead>
-			<tbody>
-				<% for(var i=0; i<foodData.length; i++) { %>
-				<tr>
-					<form id="html_form" action="/customerHomePage" role="form" method="post">
-					<td><%= foodData[i].rname%></td>
-					<td><%= foodData[i].iname%></td>
-					<td><%= foodData[i].price%></td>
-					<td><%= foodData[i].category%></td>
-					<td><%= foodData[i].rating%></td>
-					<td><button type="submit" class="btn btn-primary" name="add" value='<%= foodData[i].itemid%>'>Select</button></td>
-					<td><input type="number" name="submitQty" min="1" step="1"></td>
-				</form>
-				</tr>
 				<% } %>
-			</tbody>
-		</table>
-
+			</form>
+		</div>
   </body>

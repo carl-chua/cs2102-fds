@@ -47,7 +47,8 @@ router.post('/', function(req, res, next) {
 	pool.query(user_query, (err, data) => {
 		// do error handling if possible
 		if (customerVal == 1) {
-			res.redirect('/customerHomePage/?user=' + data.rows[0].customerid);
+			req.session.message = data.rows[0].customerid;
+			res.redirect('/customerHomePage');
 		}
 		else if (riderVal == 2) {
 			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);
