@@ -13,6 +13,9 @@ var customerOrderConfirmPageRouter = require("./routes/customerOrderConfirmPage"
 var riderHomePageRouter = require("./routes/riderHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
 var staffHomePageRouter = require("./routes/staffHomePage");
+var viewSchedulesPageRouter = require("./routes/viewSchedulesPage");
+var viewPaymentsPageRouter = require("./routes/viewPaymentsPage");
+var viewDeliveriesPageRouter = require("./routes/viewDeliveriesPage")
 var usersRouter = require("./routes/users");
 var aboutRouter = require("./routes/about");
 var tableRouter = require("./routes/table");
@@ -42,6 +45,9 @@ app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
 app.use("/riderHomePage", riderHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);
+app.use("/viewSchedulesPage", viewSchedulesPageRouter);
+app.use("/viewPaymentsPage", viewPaymentsPageRouter);
+app.use("/viewDeliveriesPage", viewDeliveriesPageRouter);
 app.use("/users", usersRouter);
 app.use("/about", aboutRouter);
 app.use("/table", tableRouter);

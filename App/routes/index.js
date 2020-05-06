@@ -51,7 +51,8 @@ router.post('/', function(req, res, next) {
 			res.redirect('/customerHomePage');
 		}
 		else if (riderVal == 2) {
-			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);
+			req.session.riderId = data.rows[0].riderid;
+			res.redirect('/riderHomePage');
 		}
 		else if (staffVal == 3) {
 			res.redirect('/staffHomePage/?user=' + data.rows[0].restaurantstaffid);
