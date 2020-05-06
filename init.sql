@@ -584,6 +584,20 @@ CREATE TRIGGER check_picks_trigger
     FOR EACH ROW
     EXECUTE FUNCTION check_items();
 
+-- if customer changes restaurant, delete all items from Picks table
+CREATE OR REPLACE FUNCTION delete_items() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM Picks
+    WHERE orderId = NEW.orderId;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER change_restaurant_trigger
+    BEFORE UPDATE OF restaurantId ON Orders
+    FOR EACH ROW
+    EXECUTE FUNCTION delete_items();
+
 -- update foodSubTotal in Orders upon insertion into Picks table
 CREATE OR REPLACE FUNCTION subtotal_update() RETURNS TRIGGER AS $$
 DECLARE
@@ -823,6 +837,7 @@ BEGIN
 						   LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
 						   FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
 	WHERE DR.isAvailable = TRUE
+    AND DR.isDeleted = FALSE
 	AND (S.startDate <= NEW.timePlaced AND S.endDate >= NEW.timePlaced)
 	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE)][EXTRACT(HOUR FROM NEW.timePlaced) - 9] = TRUE)
 	OR (S.scheduleType = 'MONTHLY' AND CASE

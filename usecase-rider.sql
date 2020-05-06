@@ -11,6 +11,19 @@ select *
 from MonthlyWorkSchedules MWS
 where MWS.scheduleId = (scheduleId);
 
+select name, 
+    email,
+	phoneNo,
+from DeliveryRiders
+where riderId = x    -- use current session id?
+
+-- update account info
+update DeliveryRiders set
+    name, 
+    email,
+    password,
+where riderId = x
+
 -- then, for all shifts (monShift, tueShift...), get hourly schedule
 (for all shifts:)
 select hourlySchedule
@@ -88,7 +101,7 @@ where O.riderId = (riderId);
 
 /* view in-progress orders */
 
-select O.orderId, O.deliveryFee, R.name, R.address, O.address, C.phoneNumber, O.timePlaced
+select O.orderId, O.deliveryFee, R.name, R.address, O.address, C.name, C.phoneNumber, O.timePlaced
 from Orders O join Restaurants R on (O.restaurantId = R.restaurantId)
 where O.riderId = (riderId)
 and O.status <> "DELIVERED";

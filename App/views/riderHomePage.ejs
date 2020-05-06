@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>CS2102 Database Connect</title>
+    <title>Riders Home Page</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -14,5 +14,52 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </head>
   <body>
-  	<h1>Welcome, <%= data[0].name%></h1>
+  	<h1>Welcome, <%= riderData[0].name%></h1>
+  	<h4>Your rating: <%= riderData[0].overallrating %> / 5</h4>
+  	<br />
+  	<br />
+  	<h2>Current job</h2>
+  	<% if (orderData.length == 0) { %><h5>None</h5> <% } %>
+  	<% if (orderData.length > 0) { %>
+  	<table class="table">
+  		<thead>
+				<tr>
+					<th scope="col">Restaurant</th>
+					<th scope="col">Restaurant address</th>
+					<th scope="col">Delivery address</th>
+					<th scope="col">Customer name</th>
+					<th scope="col">Customer phone number</th>
+					<th scope="col">Delivery fee</th>
+					<th scope="col">Time order placed</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(var i=0; i<orderData.length; i++) { %>
+				<tr>
+					<% console.log(orderData); %>
+					<td><%= orderData[i].rname%></td>
+					<td><%= orderData[i].raddress%></td>
+					<td><%= orderData[i].caddress%></td>
+					<td><%= orderData[i].cname%></td>
+					<td><%= orderData[i].phoneno%></td>
+					<td><%= orderData[i].deliveryfee%></td>
+					<td><%= orderData[i].timeplaced%></td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+		<form id="html_form" action="/riderHomePage" role="form" method="post">
+		<button type="submit" class="btn btn-primary" name="arrived" value='1'>Arrived at restaurant</button>
+		<button type="submit" class="btn btn-primary" name="collected" value='2'>Collected order</button>
+		<button type="submit" class="btn btn-primary" name="delivered" value='3'>Delivered order</button>
+		<% } %>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="schedules" value='4'>View your schedules</button>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="payments" value='5'>View your payments</button>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="deliveries" value='6'>View your deliveries</button>
+		</form>
+		<br />
+
   </body>

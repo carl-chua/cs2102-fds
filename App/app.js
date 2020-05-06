@@ -39,7 +39,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/customerHomePage", customerHomePageRouter);
 app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
-app.use("/riderHomePage", customerHomePageRouter);
+app.use("/riderHomePage", riderHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);
 app.use("/users", usersRouter);
