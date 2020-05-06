@@ -447,25 +447,27 @@ CREATE TABLE FoodReviews (
 /**
  * Triggers
  */
-DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
-DROP TRIGGER IF EXISTS existing_schedule_trigger ON Schedules;
-DROP TRIGGER IF EXISTS date_validity_trigger ON Schedules;
-DROP TRIGGER IF EXISTS daily_limit_trigger ON FoodMenuItems;
-DROP TRIGGER IF EXISTS food_subtotal_trigger ON Picks;
-DROP TRIGGER IF EXISTS food_limit_trigger ON Picks;
-DROP TRIGGER IF EXISTS code_date_trigger ON Orders;
-DROP TRIGGER IF EXISTS code_requirements_trigger ON Orders;
-DROP TRIGGER IF EXISTS code_user_trigger ON Orders;
-DROP TRIGGER IF EXISTS code_valuation_trigger ON Orders;
-DROP TRIGGER IF EXISTS order_confirmation_trigger ON Orders;
-DROP TRIGGER IF EXISTS rider_allocation_trigger ON Orders;
-DROP TRIGGER IF EXISTS time_placed_trigger ON Orders;
-DROP TRIGGER IF EXISTS order_ready_trigger ON Orders;
-DROP TRIGGER IF EXISTS order_delivering_trigger ON Orders;
-DROP TRIGGER IF EXISTS order_delivered_trigger ON Orders;
-DROP TRIGGER IF EXISTS update_delivery_trigger ON Orders;
-DROP TRIGGER IF EXISTS update_rider_rating_trigger ON Orders;
-DROP TRIGGER IF EXISTS review_validity_trigger ON FoodReviews;
+
+/* not needed because tables are dropped previously */
+-- DROP TRIGGER IF EXISTS not_available_when_deleted ON DeliveryRiders;
+-- DROP TRIGGER IF EXISTS existing_schedule_trigger ON Schedules;
+-- DROP TRIGGER IF EXISTS date_validity_trigger ON Schedules;
+-- DROP TRIGGER IF EXISTS daily_limit_trigger ON FoodMenuItems;
+-- DROP TRIGGER IF EXISTS food_subtotal_trigger ON Picks;
+-- DROP TRIGGER IF EXISTS food_limit_trigger ON Picks;
+-- DROP TRIGGER IF EXISTS code_date_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS code_requirements_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS code_user_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS code_valuation_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS order_confirmation_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS rider_allocation_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS time_placed_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS order_ready_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS order_delivering_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS order_delivered_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS update_delivery_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS update_rider_rating_trigger ON Orders;
+-- DROP TRIGGER IF EXISTS review_validity_trigger ON FoodReviews;
 
 /* DeliveryRiders triggers */
 -- if rider isDeleted, make isAvailable false
@@ -603,16 +605,19 @@ CREATE TRIGGER food_limit_trigger
 -- runs first due to alphabetical order
 CREATE OR REPLACE FUNCTION code_date_check() RETURNS TRIGGER AS $$
 DECLARE
+    startDateTime timestamp;
 	endDateTime timestamp;
 	isActive boolean;
 BEGIN
-	SELECT PC.endDateTime, PC.isActive INTO endDateTime, isActive
+	SELECT PC.startDateTime, PC.endDateTime, PC.isActive INTO startDateTime, endDateTime, isActive
 	FROM PromotionalCampaigns PC 
 	WHERE PC.promoCode = NEW.promoCode;
 
 	IF endDateTime < NEW.timePlaced THEN
 		-- cannot update isActive here as exception is raised.
-		RAISE exception 'This code is no longer valid.';
+		RAISE exception 'This promotion has ended.';
+	ELSIF startDateTime > NEW.timePlaced  THEN
+		RAISE exception 'This code is not currently available.';
 	ELSIF isActive = FALSE THEN
 		RAISE exception 'This code is not currently available.';
 	ELSE
@@ -749,7 +754,7 @@ CREATE TRIGGER code_valuation_trigger
 
 -- 4. before/when adding timePlaced, check for:
 	-- a. non-null address (ensure customer has placed address) 
-	-- b. hasPaid (if paying by card - paymentCardNoIfUsed)
+	-- NOT IMPLEMENTED b. hasPaid (if paying by card - paymentCardNoIfUsed)
 	-- c. check if order exceeds restaurant's minSpend for each restaurant
 CREATE OR REPLACE FUNCTION order_details_check() RETURNS TRIGGER AS $$
 DECLARE
@@ -985,24 +990,23 @@ CREATE TRIGGER update_delivery_trigger
 -- propagate customer's rating of delivery rider
 CREATE OR REPLACE FUNCTION update_rider_rating() RETURNS TRIGGER AS $$
 DECLARE
-	noOfDeliveries integer;
+	noOfDeliveriesWithRating integer;
 	riderRating numeric(3, 2);
 BEGIN
 	IF NEW.status <> "DELIVERED" THEN
 		RAISE exception 'You can only rate the delivery rider after the delivery is complete.';
 	END IF;
 
-	SELECT SUM(noOfDeliveries)
-	FROM Schedules S
-	GROUP BY S.riderId
-	HAVING S.riderId = NEW.riderId;
+    SELECT count(deliveryRating) INTO noOfDeliveriesWithRating
+    FROM Orders
+    WHERE NEW.riderId = Orders.riderId;
 
 	SELECT DR.overallRating INTO riderRating
 	FROM DeliveryRiders DR
 	WHERE DR.riderId = NEW.riderId;
 
 	UPDATE DeliveryRiders DR
-	SET overallRating = ((riderRating * (noOfDeliveries - 1)) + NEW.deliveryRating) / noOfDeliveries
+	SET overallRating = ((riderRating * noOfDeliveriesWithRating) + NEW.deliveryRating) / (noOfDeliveriesWithRating + 1)
 	WHERE DR.riderId = NEW.riderId;
 
 	RETURN NEW;
@@ -1370,6 +1374,7 @@ UPDATE Orders SET
 where orderId = 3;
  
 INSERT INTO Picks values 
+(4, 17, 5),
 (4, 18, 5),
 (4, 19, 2);
 -- promo code R004-0.5DOLLAROFF-ITEM003-ALL
