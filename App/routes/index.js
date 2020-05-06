@@ -31,7 +31,7 @@ router.post('/', function(req, res, next) {
 	var user_query;
 
 	if (customerVal == 1) {
-		user_query = "SELECT customerId FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT customerId, name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (riderVal == 2) {
 		user_query = "SELECT riderId FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
@@ -47,8 +47,8 @@ router.post('/', function(req, res, next) {
 	pool.query(user_query, (err, data) => {
 		// do error handling if possible
 		if (customerVal == 1) {
-			req.session.message = data.rows[0].customerid;
-			res.redirect('/customerHomePage');
+			req.session.message = data.rows[0];
+			res.redirect('/customer');
 		}
 		else if (riderVal == 2) {
 			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);

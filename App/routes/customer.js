@@ -10,8 +10,10 @@ const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
 
-var orderId = null;
-var customerId = null;
+var customerTuple;
+var orderId;
+var customerId;
+var customerName;
 
 function getSQLCustomer(customerId) {
 	return "SELECT * \
@@ -40,34 +42,34 @@ function getSQLPicks(customerID) {
 		FROM Temptable);";
 }
 
+function getSQLFood(restaurantIdPicked) {
+	return "SELECT FMI.itemId, FMI.name as itemName, FMI.price, FMI.category, FMI.rating \
+		FROM FoodMenuItems FMI \
+		WHERE FMI.isSelling = TRUE \
+		AND FMI.restaurantId = " + restaurantIdPicked + " \
+		AND FMI.isAvailableToday = TRUE;";
+}
+
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
 	// req.query.user is passed in from index.js
 	// var customerId = req.query.user;
-	var customerId = req.session.message;
+	customerTuple = req.session.message;
+	console.log(customerTuple);
+	customerId = customerTuple.customerid;
+	customerName = customerTuple.name;
 	// console.log("req:", req);
 
-	pool.query(
-		getSQLCustomer(customerId), (err, userData) => {
-		console.log(err);
 	pool.query(getSQLRestaurants(), (err, restaurants) => {
-		console.log(err);
-		// get latest unconfirmed order of this customer
-	pool.query(getSQLPicks(customerId), (err, picksData) => {
-		console.log(err);
-		if (picksData.rows.length > 0) {
-			orderId = picksData.rows[0].orderid;
+		res.render('customerOrderPage', {
+			userName: customerName,
+			restaurants: restaurants.rows
 		}
-		res.render('customerHomePage', {
-			userData: userData.rows, 
-			restaurants: restaurants.rows, 
-			picksData: picksData.rows});
-			})
-		})
+		);
 	});
 });
 
-router.post('/', function(req, res, next) {
+router.post('/', function (req, res, next) {
 	var confirm = req.body.confirm;
 	var restaurantIdPicked = req.body.restaurantIdPicked
 
@@ -117,13 +119,31 @@ router.post('/', function(req, res, next) {
 	else if (confirm == '1') {
 		res.redirect('/customerOrderConfirmPage/?user=' + customerId + '&order=' + orderId);
 	}
-	if (typeof restaurantIdPicked != 'undefined') {
-		console.log("REACHED")
-		console.log(restaurantIdPicked)
-		
-		// res.render('about', {title: restaurantIdPicked});
-		// res.send("asdf");
-	}
+	// res.render('about', {title: restaurantIdPicked});
+});
+
+router.post('/chooseFood', function (req, res, next) {
+	var restaurantIdPicked = req.body.restaurantIdPicked;
+	pool.query(getSQLPicks(customerId), (err, picksData) => {
+		console.log(err);
+		// get latest unconfirmed order of this customer
+		pool.query(getSQLFood(restaurantIdPicked), (err, foodData) => {
+			console.log(err);
+			res.render('customerPickItems', {
+				userName: customerName,
+				picksData: picksData.rows,
+				foodData: foodData.rows
+			});
+		})
+	});
+});
+
+router.post('/confirmOrder', function (req, res, next) {
+	res.send("hello" + req.body.confirm);
+});
+router.get('/accounts', function (req, res, next) {
+	res.send("accoutns");
+	res.render('customerAccountsPage', { userData: email })
 });
 
 module.exports = router;

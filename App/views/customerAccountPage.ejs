@@ -3,7 +3,7 @@
 
 <head>
 	<!-- Page Title -->
-	<title>Confirm order</title>
+	<title>Customer Home Page</title>
 	<link rel='stylesheet' href='/stylesheets/style.css' />
 
 	<!-- CSS for Styling -->
@@ -23,54 +23,22 @@
 </head>
 
 <body>
+	<h1>PandaFood</h1>
 	<br />
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
+		<a class="navbar-brand" href="#">Logged in as <%= userData[0].name%></a>
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
 			aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 			<div class="navbar-nav">
-				<a class="nav-item nav-link active" href="/customer">Order <span class="sr-only">(current)</span></a>
-				<a class="nav-item nav-link" href="/customer">Past Orders and Reviews</a>
-				<a class="nav-item nav-link" href="/customer/accounts">Accounts</a>
+				<a class="nav-item nav-link" href="#">Order <span class="sr-only">(current)</span></a>
+				<a class="nav-item nav-link" href="#">Past Orders and Reviews</a>
+				<a class="nav-item nav-link active" href="/customerAccountPage">Accounts</a>
 			</div>
 		</div>
 	</nav>
-	<h2>Your order:</h2>
-	<table class="table">
-		<thead>
-			<tr>
-				<th scope="col">Restaurant</th>
-				<th scope="col">Item</th>
-				<th scope="col">Price</th>
-				<th scope="col">Quantity selected</th>
-				<th scope="col">Total item price</th>
-			</tr>
-		</thead>
-		<tbody>
-			<% for(var i=0; i<picksData.length; i++) { %>
-			<tr>
-				<td><%= picksData[i].rname%></td>
-				<td><%= picksData[i].iname%></td>
-				<td><%= picksData[i].price%></td>
-				<td><%= picksData[i].qtyordered%></td>
-				<td><%= picksData[i].sumprice%></td>
-			</tr>
-			<% } %>
-		</tbody>
-	</table>
-	<% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
-	<h5>Subtotal: $<%= j %></h5>
 	<br />
 	<br />
-	<h4>Promo code (if any):</h4>
-	<form id="html_form" action="/customerOrderConfirmPage" role="form" method="post">
-		<input type="text" id="promocode" name="promocode">
-		<br /><br />
-		<h4>Credit card number</h4>
-		<h6>(Leave empty to pay by cash)</h6>
-		<input type="text" id="promocode" name="promocode">
-	</form>
 </body>
