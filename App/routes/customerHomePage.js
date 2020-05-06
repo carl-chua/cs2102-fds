@@ -41,8 +41,6 @@ router.post('/', function(req, res, next) {
 	var addQty = req.body.submitQty;
 	var confirm = req.body.confirm;
 
-	console.log('confirm ', confirm);
-
 	if (typeof itemIdToAdd != 'undefined' && typeof addQty != 'undefined') {
 		if (orderId == null) {
 			var new_order_query = "SELECT MAX(orderId) FROM Orders;";
@@ -87,7 +85,7 @@ router.post('/', function(req, res, next) {
 		res.redirect('back');
 	}
 	else if (confirm == '1') {
-		res.redirect('/customerOrderConfirmPage/?user=' + customerId);
+		res.redirect('/customerOrderConfirmPage/?user=' + customerId + '&order=' + orderId);
 	}
 });
 
