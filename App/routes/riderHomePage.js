@@ -7,6 +7,8 @@ const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
 
+// NEED edit email/details button as well!!
+
 router.get('/', function(req, res, next) {
 	var riderInfoQuery = "SELECT * FROM DeliveryRiders DR WHERE riderId = " + req.session.riderId + " AND isDeleted = FALSE;";
 	pool.query(riderInfoQuery, (err, riderData) => {
@@ -27,6 +29,8 @@ router.post('/', function(req, res, next) {
 	var viewPayments = req.body.payments;
 	var viewDeliveries = req.body.deliveries;
 
+	console.log(viewSchedules);
+
 	var submit_timestamp;
 	if (typeof arrivedAtRestaurant != 'undefined') {
 		submit_timestamp = "UPDATE Orders SET timeRiderArrivesRestaurant = NOW() WHERE orderId = " + arrivedAtRestaurant + ";";
@@ -40,7 +44,7 @@ router.post('/', function(req, res, next) {
 
 	if (typeof arrivedAtRestaurant != 'undefined' || typeof collectedOrder != 'undefined' || typeof deliveredOrder != 'undefined') {
 		pool.query(submit_timestamp, (err, submitData) => {
-			console.log(submitData);
+			console.log(err);
 			res.send(err.message);
 		});
 	}

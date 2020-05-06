@@ -48,7 +48,9 @@
 				<% } %>
 			</tbody>
 		</table>
+		<% } %>
 		<form id="html_form" action="/riderHomePage" role="form" method="post">
+		<% if (orderData.length > 0) { %>
 		<button type="submit" class="btn btn-primary" name="arrived" value='<%= orderData[0].orderid %>'>Arrived at restaurant</button>
 		<button type="submit" class="btn btn-primary" name="collected" value='<%= orderData[0].orderid %>'>Collected order</button>
 		<button type="submit" class="btn btn-primary" name="delivered" value='<%= orderData[0].orderid %>'>Delivered order</button>

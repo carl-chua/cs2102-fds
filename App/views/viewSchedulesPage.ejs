@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>CS2102 About Page</title>
+    <title>Rider schedule</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -14,10 +14,111 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>CS2102 <%= title%> Page</h1>
-    <p>Welcome to CS2102 About Page</p>
-    <br>
-    <br>
-    <h1><%= title%></h1>
+    <h1>Your current schedule</h1>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Day</th>
+          <th scope="col">10am - 11am</th>
+          <th scope="col">11am - 12pm</th>
+          <th scope="col">12pm - 1pm</th>
+          <th scope="col">1pm - 2pm</th>
+          <th scope="col">2pm - 3pm</th>
+          <th scope="col">3pm - 4pm</th>
+          <th scope="col">4pm - 5pm</th>
+          <th scope="col">5pm - 6pm</th>
+          <th scope="col">6pm - 7pm</th>
+          <th scope="col">7pm - 8pm</th>
+          <th scope="col">8pm - 9pm</th>
+          <th scope="col">9pm - 10pm</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Monday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[0][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[0][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Tuesday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[1][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[1][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Wednesday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[2][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[2][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Thursday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[3][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[3][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Friday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[4][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[4][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Saturday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[5][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[5][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+        <tr>
+          <th>Sunday</th>
+          <% for (var i = 0; i < shiftData[0].length; i++) { %>
+          <% if (shiftData[6][i] == true) { %> 
+          <td> &#11044; </td>
+          <% } %>
+          <% if (shiftData[6][i] == false) { %>
+          <td> </td>
+          <% } %>
+        <% } %>
+        </tr>
+      </tbody>
+    </table>
+    <br />
+    <form id="html_form" action="/viewSchedulesPage" role="form" method="post">
+    <button type="submit" class="btn btn-primary" name="create" value='1'>Create new schedule</button>
+    <br />
+    <br />
+    <button type="submit" class="btn btn-primary" name="view" value='2'>View past schedules</button>
+  </form>
   </body>
 </html>
