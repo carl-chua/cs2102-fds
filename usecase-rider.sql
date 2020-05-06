@@ -11,6 +11,19 @@ select *
 from MonthlyWorkSchedules MWS
 where MWS.scheduleId = (scheduleId);
 
+select name, 
+    email,
+	phoneNo,
+from DeliveryRiders
+where riderId = x    -- use current session id?
+
+-- update account info
+update DeliveryRiders set
+    name, 
+    email,
+    password,
+where riderId = x
+
 -- then, for all shifts (monShift, tueShift...), get hourly schedule
 (for all shifts:)
 select hourlySchedule
