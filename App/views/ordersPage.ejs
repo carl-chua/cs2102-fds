@@ -23,31 +23,81 @@
 </head>
 
 <body>
-    <h1>Completed Orders</h1>
+    <h1><%=title%></h1>
+    <h1>Pending Orders</h1>
     <table class="table">
-        <thead class="thead-light">
-            <tr>
-                <th scope="col">orderid</th>
-                <th scope="col">foodsubtotal</th>
-                <th scope="col">timeplaced</th>
-                <th scope="col">name</th>
-                <th scope="col">price</th>
-                <th scope="col">qtyordered</th>
-            </tr>
+        <tr style="background-color: #FFB6C1">
+            <th scope="col">Order ID</th>
+            <th scope="col">Subtotal</th>
+            <th scope="col">Time placed</th>
+            <th scope="col">Item name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+        </tr>
         </thead>
         <tbody>
-            <% for(var i=0; i<data.length; i++) { %>
+            <% for(var i=0; i<pending.length; i++) { %>
             <tr>
-                <td><%= data[i].orderid%></td>
-                <td><%= data[i].foodsubtotal%></td>
-                <td><%= data[i].timeplaced%></td>
-                <td><%= data[i].name%></td>
-                <td><%= data[i].price%></td>
-                <td><%= data[i].qtyordered%></td>
+                <td><%= pending[i].orderid%></td>
+                <td><%= pending[i].foodsubtotal%></td>
+                <td><%= pending[i].timeplaced%></td>
+                <td><%= pending[i].name%></td>
+                <td><%= pending[i].price%></td>
+                <td><%= pending[i].qtyordered%></td>
             </tr>
             <% } %>
         </tbody>
     </table>
+    <h1>Preparing Orders</h1>
+    <table class="table">
+        <tr style="background-color: #FFFACD">
+            <th scope="col">Order ID</th>
+            <th scope="col">Subtotal</th>
+            <th scope="col">Time placed</th>
+            <th scope="col">Item name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<preparing.length; i++) { %>
+            <tr>
+                <td><%= preparing[i].orderid%></td>
+                <td><%= preparing[i].foodsubtotal%></td>
+                <td><%= preparing[i].timeplaced%></td>
+                <td><%= preparing[i].name%></td>
+                <td><%= preparing[i].price%></td>
+                <td><%= preparing[i].qtyordered%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <h1> Completed Orders</h1>
+    <table class="table">
+        <thead style="background-color: #90ee90">
+            <tr>
+                <th scope="col">Order ID</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col">Time placed</th>
+                <th scope="col">Item name</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<completed.length; i++) { %>
+            <tr>
+                <td><%= completed[i].orderid%></td>
+                <td><%= completed[i].foodsubtotal%></td>
+                <td><%= completed[i].timeplaced%></td>
+                <td><%= completed[i].name%></td>
+                <td><%= completed[i].price%></td>
+                <td><%= completed[i].qtyordered%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <h1>Total Earnings Today: $ <%=earningsToday[0].earnings%></h1>
 </body>
 
 </html>

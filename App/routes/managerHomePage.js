@@ -1,9 +1,6 @@
 var express = require('express');
 var router = express.Router();
 
-var express = require('express');
-var router = express.Router();
-
 const { Pool } = require('pg')
 
 const pool = new Pool({
@@ -34,5 +31,6 @@ router.post('/', function(req, res, next) {
     res.redirect('/viewStatisticsHomePage');
   }
 });
+
 
 module.exports = router;

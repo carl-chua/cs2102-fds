@@ -31,13 +31,13 @@ router.post('/', function(req, res, next) {
 	var user_query;
 
 	if (customerVal == 1) {
-		user_query = "SELECT customerId FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT customerId, name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (riderVal == 2) {
 		user_query = "SELECT riderId FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (staffVal == 3) {
-		user_query = "SELECT restaurantStaffId FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT restaurantStaffId, name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
 	}
 	else if (managerVal == 4) {
 		user_query = "SELECT FDSManagerId FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
@@ -47,13 +47,17 @@ router.post('/', function(req, res, next) {
 	pool.query(user_query, (err, data) => {
 		// do error handling if possible
 		if (customerVal == 1) {
-			res.redirect('/customerHomePage/?user=' + data.rows[0].customerid);
+			req.session.message = data.rows[0];
+			res.redirect('/customer');
 		}
 		else if (riderVal == 2) {
-			res.redirect('/riderHomePage/?user=' + data.rows[0].riderid);
+			req.session.riderId = data.rows[0].riderid;
+			res.redirect('/riderHomePage');
 		}
 		else if (staffVal == 3) {
-			res.redirect('/staffHomePage/?user=' + data.rows[0].restaurantstaffid);
+			req.session.staffId = data.rows[0].restaurantstaffid;
+			req.session.name = data.rows[0].name;
+			res.redirect('restaurantStaffHomePage');
 		}
 		else if (managerVal == 4) {
 			res.redirect('/managerHomePage/?user=' + data.rows[0].fdsmanagerid);

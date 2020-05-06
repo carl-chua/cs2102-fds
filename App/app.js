@@ -3,15 +3,19 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+var session = require('express-session');
 
 require("dotenv").config();
-
 var indexRouter = require("./routes/index");
-var customerHomePageRouter = require("./routes/customerHomePage");
+var customerRouter = require("./routes/customer");
 var customerOrderConfirmPageRouter = require("./routes/customerOrderConfirmPage");
 var riderHomePageRouter = require("./routes/riderHomePage");
+var restaurantStaffHomePageRouter = require("./routes/restaurantStaffHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
 var staffHomePageRouter = require("./routes/staffHomePage");
+var viewSchedulesPageRouter = require("./routes/viewSchedulesPage");
+var viewPaymentsPageRouter = require("./routes/viewPaymentsPage");
+var viewDeliveriesPageRouter = require("./routes/viewDeliveriesPage")
 var usersRouter = require("./routes/users");
 var aboutRouter = require("./routes/about");
 var tableRouter = require("./routes/table");
@@ -23,10 +27,13 @@ var ordersRouter = require("./routes/orders");
 var viewAllFDPCPageRouter = require("./routes/viewAllFDPCPage");
 var createFDPCPageRouter = require("./routes/createFDPCPage");
 var viewStatisticsHomePageRouter = require("./routes/viewStatisticsHomePage");
+var menuRouter = require("./routes/menu");
+var addItemRouter = require("./routes/addItem");
 
 var app = express();
 
 // view engine setup
+app.use(session({secret: 'mySecret', resave: false, saveUninitialized: false}));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -36,12 +43,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+
 app.use("/", indexRouter);
-app.use("/customerHomePage", customerHomePageRouter);
+app.use("/customer", customerRouter);
 app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
-app.use("/riderHomePage", customerHomePageRouter);
+app.use("/riderHomePage", riderHomePageRouter);
+app.use("/restaurantStaffHomePage", restaurantStaffHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);
+app.use("/viewSchedulesPage", viewSchedulesPageRouter);
+app.use("/viewPaymentsPage", viewPaymentsPageRouter);
+app.use("/viewDeliveriesPage", viewDeliveriesPageRouter);
 app.use("/users", usersRouter);
 app.use("/about", aboutRouter);
 app.use("/table", tableRouter);
@@ -52,6 +64,8 @@ app.use("/orders", ordersRouter);
 app.use("/viewAllFDPCPage", viewAllFDPCPageRouter);
 app.use("/createFDPCPage", createFDPCPageRouter);
 app.use("/viewStatisticsHomePage", viewStatisticsHomePageRouter);
+app.use("/menu", menuRouter);
+app.use("/addItem", addItemRouter);
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

@@ -371,6 +371,7 @@ CREATE TABLE Orders (
 	riderId integer,
 	address varchar,
 	customerId integer not null,
+    restaurantId integer,
 	foreign key(promoCode) references PromotionalCampaigns(promoCode),
 	foreign key(riderId) references DeliveryRiders(riderId),
 	foreign key(address) references Locations(address),
@@ -556,6 +557,47 @@ CREATE TRIGGER daily_limit_trigger
 
 /* Orders triggers */
 
+-- check all picked items are from same restaurants
+CREATE OR REPLACE FUNCTION check_items() RETURNS TRIGGER AS $$
+DECLARE
+    itemRestaurantId integer;
+    orderRestaurantId integer;
+BEGIN
+    SELECT R.restaurantId INTO itemRestaurantId
+    FROM Restaurants R JOIN FoodMenuItems FMI ON (R.restaurantId = FMI.restaurantId)
+    WHERE NEW.itemId = FMI.itemId;
+
+    SELECT O.restaurantId INTO orderRestaurantId
+    FROM Orders O
+    WHERE O.orderId = NEW.orderId;
+
+    IF itemRestaurantId <> orderRestaurantId OR orderRestaurantId IS NULL THEN
+        RAISE exception 'This item does not belong to your selected restaurant.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_picks_trigger
+    BEFORE UPDATE OF itemId, qtyOrdered OR INSERT ON Picks
+    FOR EACH ROW
+    EXECUTE FUNCTION check_items();
+
+-- if customer changes restaurant, delete all items from Picks table
+CREATE OR REPLACE FUNCTION delete_items() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM Picks
+    WHERE orderId = NEW.orderId;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER change_restaurant_trigger
+    BEFORE UPDATE OF restaurantId ON Orders
+    FOR EACH ROW
+    EXECUTE FUNCTION delete_items();
+
 -- update foodSubTotal in Orders upon insertion into Picks table
 CREATE OR REPLACE FUNCTION subtotal_update() RETURNS TRIGGER AS $$
 DECLARE
@@ -653,9 +695,7 @@ BEGIN
 		FROM RestaurantPromotionalCampaigns RPC
 		WHERE NEW.promoCode = RPC.promoCode;
 
-		IF restaurantId NOT IN (SELECT FMI.restaurantId
-							FROM Picks P JOIN FoodMenuItems FMI ON (P.itemId = FMI.itemId)
-							WHERE NEW.orderId = P.orderId) THEN
+		IF restaurantId <> NEW.restaurantId THEN
 			RAISE exception 'This code does not apply to your order.';
 		END IF;
 	ELSIF promoType = 'FIPC' THEN
@@ -671,7 +711,7 @@ BEGIN
 	END IF;
 
 	IF NEW.foodSubTotal < minSpend THEN
-		RAISE exception 'Your order has not met the minimum expenditure requirement.';
+		RAISE exception 'Your order has not met the minimum expenditure requirements of the restaurant.';
 	END IF;
 
 	RETURN NEW;
@@ -756,19 +796,19 @@ CREATE TRIGGER code_valuation_trigger
 	-- a. non-null address (ensure customer has placed address) 
 	-- NOT IMPLEMENTED b. hasPaid (if paying by card - paymentCardNoIfUsed)
 	-- c. check if order exceeds restaurant's minSpend for each restaurant
+	-- d. ensure that restaurantId is filled
 CREATE OR REPLACE FUNCTION order_details_check() RETURNS TRIGGER AS $$
 DECLARE
 	restaurantsUnderspent integer;
+    minSpend integer;
 BEGIN
-	SELECT count(DISTINCT R.restaurantId) INTO restaurantsUnderspent
-	FROM FoodMenuItems FMI JOIN Picks P ON (P.orderId = NEW.orderId AND P.itemId = FMI.itemId)
-					       JOIN Restaurants R ON (R.restaurantId = FMI.restaurantId)
-	GROUP BY R.restaurantId, R.minSpend
-	HAVING SUM(P.qtyOrdered * FMI.price) < R.minSpend;
+    SELECT R.minSpend INTO minSpend
+    FROM Restaurants R
+    WHERE R.restaurantId = NEW.restaurantId;
 
-	IF restaurantsUnderspent > 0 THEN
-		RAISE exception 'Your order has not fulfilled the minimum expenditure requirements of all restaurants.';
-	END IF;
+    IF NEW.foodSubTotal < minSpend THEN
+        RAISE exception 'Your order has not met the minimum expenditure requirements of the restaurant.';
+    END IF;
 
 	IF NEW.address IS NULL THEN
 		RAISE exception 'Please input your delivery address.';
@@ -797,6 +837,7 @@ BEGIN
 						   LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
 						   FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
 	WHERE DR.isAvailable = TRUE
+    AND DR.isDeleted = FALSE
 	AND (S.startDate <= NEW.timePlaced AND S.endDate >= NEW.timePlaced)
 	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE)][EXTRACT(HOUR FROM NEW.timePlaced) - 9] = TRUE)
 	OR (S.scheduleType = 'MONTHLY' AND CASE
@@ -1154,11 +1195,11 @@ INSERT INTO Restaurants values
 (5, 'restaurant005', 50.00, 'restaurant005add005area003');
 
 INSERT INTO FoodMenuItems values
-(1, 'item001r004', 1, 1099, 'Exotic', 0, true, true, 1, null),
-(2, 'item002r004', 2, 499, 'Exotic', 0, true, true, 1, null),
-(3, 'item003r004', 3, 299, 'Exotic', 0, true, true, 1, null),
-(4, 'item004r004', 4, 399, 'Exotic', 0, true, true, 1, null),
-(5, 'item005r004', 5, 99, 'Exotic', 0, true, true, 1, null);
+(1, 'item001r001', 1, 1099, 'Exotic', 0, true, true, 1, null),
+(2, 'item002r001', 2, 499, 'Exotic', 0, true, true, 1, null),
+(3, 'item003r001', 3, 299, 'Exotic', 0, true, true, 1, null),
+(4, 'item004r001', 4, 399, 'Exotic', 0, true, true, 1, null),
+(5, 'item005r001', 5, 99, 'Exotic', 0, true, true, 1, null);
 
 INSERT INTO FoodMenuItems values
 (6, 'item001r002', 100, 10, 'Western', 0, true, true, 2, null),
@@ -1246,16 +1287,19 @@ INSERT INTO Customers values
     '2020-04-05 18:05:00', 0, null, false, null, null, null, null, null);
 
 INSERT INTO Orders values
-(1, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 1),
-(2, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 2),
-(3, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 3),
-(4, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 4),
-(5, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 5);
+(1, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 1, null),
+(2, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 2, null),
+(3, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 3, null),
+(4, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 4, null),
+(5, 'CART', 0, 5, 0, null, null, null, null, null, null, null, null, false, null, null, 5, null);
 
 -- PROBLEM: if customer re-chooses extra portions of same item, there is a clash of (orderId, itemId)
 -- e.g. chooses (1, 6, 10) and then 12 more portions later: (1, 6, 12) again
 -- fix by querying before inserting; if (orderId, itemId) exists, just update
 
+UPDATE Orders SET
+	restaurantId = 2
+where orderId = 1;
 -- customer 1 orders with cash:
 INSERT INTO Picks values
 (1, 6, 10),
@@ -1298,6 +1342,10 @@ UPDATE Orders SET
 	riderId = 3
 where orderId = 1;
  */
+
+UPDATE Orders SET
+	restaurantId = 3
+where orderId = 2;
 -- customer 2 orders with card
 INSERT INTO Picks values 
 (2, 15, 2),
@@ -1340,6 +1388,9 @@ where orderId = 2;
 -- customer 3 orders with cash
 -- promo code R003-2DOLLAROFF-FIRSTACCOUNT
  
+UPDATE Orders SET
+	restaurantId = 3
+where orderId = 3;
 INSERT INTO Picks values 
 (3, 11, 2),
 (3, 12, 3),
@@ -1373,6 +1424,11 @@ UPDATE Orders SET
     timeRiderDelivered = '2020-05-06 12:30:01'
 where orderId = 3;
  
+
+ 
+UPDATE Orders SET
+	restaurantId = 4
+where orderId = 4;
 INSERT INTO Picks values 
 (4, 17, 5),
 (4, 18, 5),
@@ -1409,6 +1465,9 @@ UPDATE Orders SET
 where orderId = 4;
 
 -- Customer 5 pays card
+UPDATE Orders SET
+	restaurantId = 1
+where orderId = 5;
 -- R001-50PERCENTOFF-ALL
 INSERT INTO Picks values
 (5, 1, 1),
