@@ -8,6 +8,7 @@ require("dotenv").config();
 
 var indexRouter = require("./routes/index");
 var customerHomePageRouter = require("./routes/customerHomePage");
+var customerOrderConfirmPageRouter = require("./routes/customerOrderConfirmPage");
 var riderHomePageRouter = require("./routes/riderHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
 var staffHomePageRouter = require("./routes/staffHomePage");
@@ -34,6 +35,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/customerHomePage", customerHomePageRouter);
+app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
 app.use("/riderHomePage", customerHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);

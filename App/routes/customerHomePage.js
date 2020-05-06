@@ -22,7 +22,7 @@ router.get('/', function(req, res, next) {
 		var get_restaurants = "SELECT R.restaurantId, R.name AS rname, FMI.itemId, FMI.name as iname, FMI.price, FMI.category, FMI.rating FROM Restaurants R JOIN FoodMenuItems FMI ON (R.restaurantId = FMI.restaurantId) WHERE FMI.isSelling = TRUE AND FMI.isAvailableToday = TRUE ORDER BY R.restaurantId;";
 		pool.query(get_restaurants, (err, foodData) => {
 			// get latest unconfirmed order of this customer
-			var get_picks = "WITH Temptable AS (SELECT O.orderId, R.restaurantId, R.name AS rname, P.itemId, FMI.name AS iname, FMI.price, P.qtyOrdered, (P.qtyOrdered * FMI.price) AS sumPrice FROM Picks P NATURAL JOIN Orders O JOIN FoodMenuItems FMI ON (P.itemId = FMI.itemId) JOIN Restaurants R ON (FMI.restaurantId = R.restaurantId) WHERE O.customerId = " + req.query.user + " AND O.status = 'CART' ORDER BY O.orderId desc) SELECT * FROM Temptable T WHERE T.orderId = (SELECT MAX(orderId) FROM Temptable);";
+			var get_picks = "WITH Temptable AS (SELECT O.orderId, O.foodSubTotal, R.restaurantId, R.name AS rname, P.itemId, FMI.name AS iname, FMI.price, P.qtyOrdered, (P.qtyOrdered * FMI.price) AS sumPrice FROM Picks P NATURAL JOIN Orders O JOIN FoodMenuItems FMI ON (P.itemId = FMI.itemId) JOIN Restaurants R ON (FMI.restaurantId = R.restaurantId) WHERE O.customerId = " + req.query.user + " AND O.status = 'CART' ORDER BY O.orderId desc) SELECT * FROM Temptable T WHERE T.orderId = (SELECT MAX(orderId) FROM Temptable);";
 			pool.query(get_picks, (err, picksData) => {
 				console.log(err);
 				if (picksData.rows.length > 0) {
@@ -39,6 +39,9 @@ router.post('/', function(req, res, next) {
 	var removeQty = req.body.removeQty;
 	var itemIdToAdd = req.body.add;
 	var addQty = req.body.submitQty;
+	var confirm = req.body.confirm;
+
+	console.log('confirm ', confirm);
 
 	if (typeof itemIdToAdd != 'undefined' && typeof addQty != 'undefined') {
 		if (orderId == null) {
@@ -64,11 +67,27 @@ router.post('/', function(req, res, next) {
 				console.log(err);
 			});
 		})
-		var user_query = "SELECT * FROM Customers WHERE customerId = '" + customerId + "';";
 		res.redirect('back');
 	}
 	else if (typeof itemIdToRemove != 'undefined' && typeof removeQty != 'undefined') {
-		
+		var get_number_of_items = "SELECT * FROM Picks P WHERE orderId = " + orderId + " AND itemId = " + itemIdToRemove + ";";
+		pool.query(get_number_of_items, (err, numberData) => {
+			console.log(err);
+			var update_query;
+			if (numberData.rows[0].qtyordered <= removeQty) {
+				update_query = "DELETE FROM Picks WHERE orderId = " + orderId + " AND itemId = " + itemIdToRemove + ";";
+			}
+			else {
+				update_query = "UPDATE Picks SET qtyOrdered = qtyOrdered - " + removeQty + " WHERE orderId = " + orderId + " AND itemId = " + itemIdToRemove + ";";
+			}
+			pool.query(update_query, (err, updateData) => {
+				console.log(err);
+			})
+		})
+		res.redirect('back');
+	}
+	else if (confirm == '1') {
+		res.redirect('/customerOrderConfirmPage/?user=' + customerId);
 	}
 });
 

@@ -45,6 +45,14 @@
 				<% } %>
 			</tbody>
 		</table>
+		<br />
+		<% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
+		<h5>Total price: $<%= j %></h5>
+		<form id="html_form" action="/customerHomePage" role="form" method="post">
+		<button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
+		</form>
+		<br />
+		<br />
   	<h2>Select more items:</h2><br />
   	<table class="table">
 			<thead>
