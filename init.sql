@@ -1386,7 +1386,7 @@ INSERT INTO Locations values
 UPDATE Orders SET
 -- promo discount applied by trigger
     promoCode = 'R004-0.5DOLLAROFF-ITEM003-ALL',
-    timePlaced = '2020-04-30 12:10:01',
+    timePlaced = '2020-05-07 12:10:01',
     address = 'customer004add001area001'
 where orderId = 4;
 -- restaurant accepts order
@@ -1395,17 +1395,17 @@ where orderId = 4;
 
 -- rider arrives at restaurant
 UPDATE Orders SET
-    timeRiderArrivesRestaurant = '2020-04-30 12:18:44'
+    timeRiderArrivesRestaurant = '2020-05-07 12:18:44'
 where orderId = 4;
 
 -- rider leaves restaurant
 UPDATE Orders SET
-    timeRiderLeavesRestaurant = '2020-04-30 12:22:01'
+    timeRiderLeavesRestaurant = '2020-05-07 12:22:01'
 where orderId = 4;
 -- rider delivers successfully
 UPDATE Orders SET
     hasPaid = true,
-    timeRiderDelivered = '2020-04-30 12:30:01'
+    timeRiderDelivered = '2020-05-07 12:30:01'
 where orderId = 4;
 
 -- Customer 5 pays card
