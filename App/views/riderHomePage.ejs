@@ -18,8 +18,8 @@
   	<h4>Your rating: <%= riderData[0].overallrating %> / 5</h4>
   	<br />
   	<br />
-  	<h1>Current orders</h1>
-  	<% if (orderData.length == 0) { %><h4>None</h4> <% } %>
+  	<h2>Current job</h2>
+  	<% if (orderData.length == 0) { %><h5>None</h5> <% } %>
   	<% if (orderData.length > 0) { %>
   	<table class="table">
   		<thead>
@@ -29,27 +29,37 @@
 					<th scope="col">Delivery address</th>
 					<th scope="col">Customer name</th>
 					<th scope="col">Customer phone number</th>
+					<th scope="col">Delivery fee</th>
 					<th scope="col">Time order placed</th>
 				</tr>
 			</thead>
 			<tbody>
 				<% for(var i=0; i<orderData.length; i++) { %>
 				<tr>
-					<form id="html_form" action="/customerHomePage" role="form" method="post">
 					<% console.log(orderData); %>
 					<td><%= orderData[i].rname%></td>
 					<td><%= orderData[i].raddress%></td>
 					<td><%= orderData[i].caddress%></td>
 					<td><%= orderData[i].cname%></td>
-					<td><%= orderData[i].phonenumber%></td>
+					<td><%= orderData[i].phoneno%></td>
+					<td><%= orderData[i].deliveryfee%></td>
 					<td><%= orderData[i].timeplaced%></td>
-					<td><button type="submit" class="btn btn-primary" name="remove" value='<%= orderData[i].itemid%>'>Remove</button></td>
-					<td><input type="number" name="removeQty" min="1" step="1"></td>
-					</form>
 				</tr>
 				<% } %>
 			</tbody>
 		</table>
+		<form id="html_form" action="/riderHomePage" role="form" method="post">
+		<button type="submit" class="btn btn-primary" name="arrived" value='1'>Arrived at restaurant</button>
+		<button type="submit" class="btn btn-primary" name="collected" value='2'>Collected order</button>
+		<button type="submit" class="btn btn-primary" name="delivered" value='3'>Delivered order</button>
 		<% } %>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="schedules" value='4'>View your schedules</button>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="payments" value='5'>View your payments</button>
+		<br /><br />
+		<button type="submit" class="btn btn-primary" name="deliveries" value='6'>View your deliveries</button>
+		</form>
+		<br />
 
   </body>

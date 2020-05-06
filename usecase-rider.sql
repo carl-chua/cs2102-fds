@@ -101,7 +101,7 @@ where O.riderId = (riderId);
 
 /* view in-progress orders */
 
-select O.orderId, O.deliveryFee, R.name, R.address, O.address, C.phoneNumber, O.timePlaced
+select O.orderId, O.deliveryFee, R.name, R.address, O.address, C.name, C.phoneNumber, O.timePlaced
 from Orders O join Restaurants R on (O.restaurantId = R.restaurantId)
 where O.riderId = (riderId)
 and O.status <> "DELIVERED";

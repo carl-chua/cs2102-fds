@@ -23,4 +23,13 @@ router.get('/', function(req, res, next) {
 	});
 });
 
+router.post('/', function(req, res, next) {
+	var arrivedAtRestaurant = req.body.arrived;
+	var collectedOrder = req.body.collected;
+	var deliveredOrder = req.body.delivered;
+	var viewSchedules = req.body.schedules;
+	var viewPayments = req.body.payments;
+	var viewDeliveries = req.body.deliveries;
+});
+
 module.exports = router;
