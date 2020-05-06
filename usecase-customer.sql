@@ -40,8 +40,8 @@ from Restaurants R
 -- click on restaurant: 
     -- display foodMenuItems
     -- display current restaurant
-    -- display food item promotions
-    -- display restaurant promotions
+    -- display food item promotions - low priority
+    -- display restaurant promotions - low priority
 select name, category, price, rating
 from FoodMenuItems
 where restaurantId = 0
@@ -60,7 +60,7 @@ and isSelling = true
 and category = 'Local'  
 -- and isAvailable = true  -- need to check and display
 
--- search food by name
+-- search food by name (within restaurant)
 
 -- click on food: show reviews
 select starRating, reviewText
