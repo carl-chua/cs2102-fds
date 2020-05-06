@@ -1,9 +1,6 @@
 var express = require('express');
 var router = express.Router();
 
-var express = require('express');
-var router = express.Router();
-
 const { Pool } = require('pg')
 
 const pool = new Pool({
@@ -12,7 +9,8 @@ const pool = new Pool({
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-  res.render('customerHomePage', { title: 'Express' });
+  res.render('managerHomePage', { title: 'ManagerHomepage' });
 });
+
 
 module.exports = router;

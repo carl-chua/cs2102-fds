@@ -3,7 +3,7 @@
 
 <head>
     <!-- Page Title -->
-    <title>Manager Homepage</title>
+    <title>Restaurant Staff Homepage</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 
     <!-- CSS for Styling -->
@@ -23,7 +23,18 @@
 </head>
 
 <body>
-    <h1>Manager Homepage</h1>
+    <h1>Restaurant Staff Homepage</h1>
+    <br>
+    <h2>Welcome <%=name%>!</h2>
+    <form id="html_form" action="/menu" role="form" method="post">
+        <button type="submit" class="btn btn-primary" name="menu" value="1">View menu</button>
+    </form>
+    <!-- <button id="menuButton" class="float-left submit-button" >View Menu</button>
+    <script type="text/javascript">
+        document.getElementById("menuButton").onclick = function () {
+            location.href = "/menu";
+        };
+    </script> -->
 </body>
 
 </html>
