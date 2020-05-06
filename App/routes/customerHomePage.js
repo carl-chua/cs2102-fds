@@ -99,7 +99,7 @@ router.post('/', function(req, res, next) {
 				update_query = "UPDATE Picks SET qtyOrdered = qtyOrdered - " + removeQty + " WHERE orderId = " + orderId + " AND itemId = " + itemIdToRemove + ";";
 			}
 			pool.query(update_query, (err, updateData) => {
-				console.log(err);
+				res.send(err);
 			})
 		})
 		res.redirect('back');
