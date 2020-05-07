@@ -6,6 +6,8 @@ const { Pool } = require('pg')
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
+// say whether its monthly or weekly in ejs
+// start date, end date, details
 
 // MWS
 var shift1 = [true,true,true,true,false,true,true,true,true,false,false,false];
@@ -65,6 +67,16 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
 	var createSchedule = req.body.create;
 	var viewPast = req.body.view;
+	var editCurrent = req.body.edit;
+
+	if (typeof createSchedule != 'undefined') {
+		res.redirect('/newSchedulesPage');
+		// use radio buttons in table format to select
+	}
+	else if (typeof viewPast != 'undefined') {
+		res.redirect('/viewPastSchedulesPage');
+		// new page with selectable table of all past dates
+	}
 
 	console.log(createSchedule, viewPast);
 });

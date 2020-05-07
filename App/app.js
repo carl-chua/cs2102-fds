@@ -14,6 +14,8 @@ var restaurantStaffHomePageRouter = require("./routes/restaurantStaffHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
 var staffHomePageRouter = require("./routes/staffHomePage");
 var viewSchedulesPageRouter = require("./routes/viewSchedulesPage");
+var newSchedulesPageRouter = require("./routes/newSchedulesPage");
+var viewPastSchedulesPageRouter = require("./routes/viewPastSchedulesPage");
 var viewPaymentsPageRouter = require("./routes/viewPaymentsPage");
 var viewDeliveriesPageRouter = require("./routes/viewDeliveriesPage")
 var usersRouter = require("./routes/users");
@@ -49,6 +51,8 @@ app.use("/restaurantStaffHomePage", restaurantStaffHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);
 app.use("/staffHomePage", staffHomePageRouter);
 app.use("/viewSchedulesPage", viewSchedulesPageRouter);
+app.use("/newSchedulesPage", newSchedulesPageRouter);
+app.use("/viewPastSchedulesPage", viewPastSchedulesPageRouter);
 app.use("/viewPaymentsPage", viewPaymentsPageRouter);
 app.use("/viewDeliveriesPage", viewDeliveriesPageRouter);
 app.use("/users", usersRouter);

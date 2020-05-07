@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+  <head>
+		<!-- Page Title -->
+    <title>New rider schedule</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+		
+		<!-- CSS for Styling -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+		
+		<!-- JavaScript for Interactivity -->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+
+    <script>
+        function getInputValue(){
+            // Selecting the input element and get its value 
+            if (document.getElementById("type").value == "mws") {
+              document.getElementById("mondaymws").style.display = "block";
+              document.getElementById("tuesdaymws").style.display = "block";
+              document.getElementById("wednesdaymws").style.display = "block";
+              document.getElementById("thursdaymws").style.display = "block";
+              document.getElementById("fridaymws").style.display = "block";
+              document.getElementById("saturdaymws").style.display = "block";
+              document.getElementById("sundaymws").style.display = "block";
+              document.getElementById("montext").style.display = "block";
+              document.getElementById("tuetext").style.display = "block";
+              document.getElementById("wedtext").style.display = "block";
+              document.getElementById("thutext").style.display = "block";
+              document.getElementById("fritext").style.display = "block";
+              document.getElementById("sattext").style.display = "block";
+              document.getElementById("suntext").style.display = "block";
+              document.getElementById("wwstable").style.display = "none";
+            }
+            else if (document.getElementById("type").value == "wws") {
+              document.getElementById("mondaymws").style.display = "none";
+              document.getElementById("tuesdaymws").style.display = "none";
+              document.getElementById("wednesdaymws").style.display = "none";
+              document.getElementById("thursdaymws").style.display = "none";
+              document.getElementById("fridaymws").style.display = "none";
+              document.getElementById("saturdaymws").style.display = "none";
+              document.getElementById("sundaymws").style.display = "none";
+              document.getElementById("montext").style.display = "none";
+              document.getElementById("tuetext").style.display = "none";
+              document.getElementById("wedtext").style.display = "none";
+              document.getElementById("thutext").style.display = "none";
+              document.getElementById("fritext").style.display = "none";
+              document.getElementById("sattext").style.display = "none";
+              document.getElementById("suntext").style.display = "none";
+              document.getElementById("wwstable").style.display = "block";
+            }
+            else {
+              document.getElementById("mondaymws").style.display = "none";
+              document.getElementById("tuesdaymws").style.display = "none";
+              document.getElementById("wednesdaymws").style.display = "none";
+              document.getElementById("thursdaymws").style.display = "none";
+              document.getElementById("fridaymws").style.display = "none";
+              document.getElementById("saturdaymws").style.display = "none";
+              document.getElementById("sundaymws").style.display = "none";
+              document.getElementById("montext").style.display = "none";
+              document.getElementById("tuetext").style.display = "none";
+              document.getElementById("wedtext").style.display = "none";
+              document.getElementById("thutext").style.display = "none";
+              document.getElementById("fritext").style.display = "none";
+              document.getElementById("sattext").style.display = "none";
+              document.getElementById("suntext").style.display = "none";
+              document.getElementById("wwstable").style.display = "none";
+            }
+        }
+            
+    </script>
+  </head>
+  <body>
+    <h1>Create a new schedule</h1>
+    <h5>Schedule type:</h5>
+    <form id="html_form" action="/newSchedulesPage" role="form" method="post">
+    <select name="type" id="type" onclick="getInputValue();">
+      <option selected value="mws">Monthly</option>
+      <option value="wws">Weekly</option>
+    </select>
+
+    <br /><br />
+    <h7 id="montext">Monday:</h7>
+    <select name="mondaymws" id="mondaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+      <br />
+    <h7 id="tuetext">Tuesday:</h7>
+    <select name="tuesdaymws" id="tuesdaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+        <br />
+    <h7 id="wedtext">Wednesday:</h7>
+    <select name="wednesdaymws" id="wednesdaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+        <br />
+    <h7 id="thutext">Thursday:</h7>
+    <select name="thursdaymws" id="thursdaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+        <br />
+    <h7 id="fritext">Friday:</h7>
+    <select name="fridaymws" id="fridaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+        <br />
+    <h7 id="sattext">Saturday:</h7>
+    <select name="saturdaymws" id="saturdaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>
+        <br />
+    <h7 id="suntext">Sunday:</h7>
+    <select name="sundaymws" id="sundaymws">
+      <option selected value="1">10am - 2pm, 3pm - 7pm</option>
+      <option value="2">11am - 3pm, 4pm - 8pm</option>
+      <option value="3">12am - 4pm, 5pm - 9pm</option>
+      <option value="4">1pm - 5pm, 6pm - 10pm</option>
+      <option value="null">Not working</option>
+    </select>    
+
+      <table class="table" id="wwstable">
+      <thead>
+        <tr>
+          <th scope="col">Day</th>
+          <th scope="col">10am - 11am</th>
+          <th scope="col">11am - 12pm</th>
+          <th scope="col">12pm - 1pm</th>
+          <th scope="col">1pm - 2pm</th>
+          <th scope="col">2pm - 3pm</th>
+          <th scope="col">3pm - 4pm</th>
+          <th scope="col">4pm - 5pm</th>
+          <th scope="col">5pm - 6pm</th>
+          <th scope="col">6pm - 7pm</th>
+          <th scope="col">7pm - 8pm</th>
+          <th scope="col">8pm - 9pm</th>
+          <th scope="col">9pm - 10pm</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Monday</th>
+          <td><input type="checkbox" name="mon10"></td>
+          <td><input type="checkbox" name="mon11"></td>
+          <td><input type="checkbox" name="mon12"></td>
+          <td><input type="checkbox" name="mon13"></td>
+          <td><input type="checkbox" name="mon14"></td>
+          <td><input type="checkbox" name="mon15"></td>
+          <td><input type="checkbox" name="mon16"></td>
+          <td><input type="checkbox" name="mon17"></td>
+          <td><input type="checkbox" name="mon18"></td>
+          <td><input type="checkbox" name="mon19"></td>
+          <td><input type="checkbox" name="mon20"></td>
+          <td><input type="checkbox" name="mon21"></td>
+        </tr>
+        <tr>
+          <th>Tuesday</th>
+          <td><input type="checkbox" name="tue10"></td>
+          <td><input type="checkbox" name="tue11"></td>
+          <td><input type="checkbox" name="tue12"></td>
+          <td><input type="checkbox" name="tue13"></td>
+          <td><input type="checkbox" name="tue14"></td>
+          <td><input type="checkbox" name="tue15"></td>
+          <td><input type="checkbox" name="tue16"></td>
+          <td><input type="checkbox" name="tue17"></td>
+          <td><input type="checkbox" name="tue18"></td>
+          <td><input type="checkbox" name="tue19"></td>
+          <td><input type="checkbox" name="tue20"></td>
+          <td><input type="checkbox" name="tue21"></td>
+        </tr>
+        <tr>
+          <th>Wednesday</th>
+          <td><input type="checkbox" name="wed10"></td>
+          <td><input type="checkbox" name="wed11"></td>
+          <td><input type="checkbox" name="wed12"></td>
+          <td><input type="checkbox" name="wed13"></td>
+          <td><input type="checkbox" name="wed14"></td>
+          <td><input type="checkbox" name="wed15"></td>
+          <td><input type="checkbox" name="wed16"></td>
+          <td><input type="checkbox" name="wed17"></td>
+          <td><input type="checkbox" name="wed18"></td>
+          <td><input type="checkbox" name="wed19"></td>
+          <td><input type="checkbox" name="wed20"></td>
+          <td><input type="checkbox" name="wed21"></td>
+        </tr>
+        <tr>
+          <th>Thursday</th>
+          <td><input type="checkbox" name="thu10"></td>
+          <td><input type="checkbox" name="thu11"></td>
+          <td><input type="checkbox" name="thu12"></td>
+          <td><input type="checkbox" name="thu13"></td>
+          <td><input type="checkbox" name="thu14"></td>
+          <td><input type="checkbox" name="thu15"></td>
+          <td><input type="checkbox" name="thu16"></td>
+          <td><input type="checkbox" name="thu17"></td>
+          <td><input type="checkbox" name="thu18"></td>
+          <td><input type="checkbox" name="thu19"></td>
+          <td><input type="checkbox" name="thu20"></td>
+          <td><input type="checkbox" name="thu21"></td>
+        </tr>
+        <tr>
+          <th>Friday</th>
+          <td><input type="checkbox" name="fri10"></td>
+          <td><input type="checkbox" name="fri11"></td>
+          <td><input type="checkbox" name="fri12"></td>
+          <td><input type="checkbox" name="fri13"></td>
+          <td><input type="checkbox" name="fri14"></td>
+          <td><input type="checkbox" name="fri15"></td>
+          <td><input type="checkbox" name="fri16"></td>
+          <td><input type="checkbox" name="fri17"></td>
+          <td><input type="checkbox" name="fri18"></td>
+          <td><input type="checkbox" name="fri19"></td>
+          <td><input type="checkbox" name="fri20"></td>
+          <td><input type="checkbox" name="fri21"></td>
+        </tr>
+        <tr>
+          <th>Saturday</th>
+          <td><input type="checkbox" name="sat10"></td>
+          <td><input type="checkbox" name="sat11"></td>
+          <td><input type="checkbox" name="sat12"></td>
+          <td><input type="checkbox" name="sat13"></td>
+          <td><input type="checkbox" name="sat14"></td>
+          <td><input type="checkbox" name="sat15"></td>
+          <td><input type="checkbox" name="sat16"></td>
+          <td><input type="checkbox" name="sat17"></td>
+          <td><input type="checkbox" name="sat18"></td>
+          <td><input type="checkbox" name="sat19"></td>
+          <td><input type="checkbox" name="sat20"></td>
+          <td><input type="checkbox" name="sat21"></td>
+        </tr>
+        <tr>
+          <th>Sunday</th>
+          <td><input type="checkbox" name="sun10"></td>
+          <td><input type="checkbox" name="sun11"></td>
+          <td><input type="checkbox" name="sun12"></td>
+          <td><input type="checkbox" name="sun13"></td>
+          <td><input type="checkbox" name="sun14"></td>
+          <td><input type="checkbox" name="sun15"></td>
+          <td><input type="checkbox" name="sun16"></td>
+          <td><input type="checkbox" name="sun17"></td>
+          <td><input type="checkbox" name="sun18"></td>
+          <td><input type="checkbox" name="sun19"></td>
+          <td><input type="checkbox" name="sun20"></td>
+          <td><input type="checkbox" name="sun21"></td>
+        </tr>
+      </tbody>
+    </table>
+    <h7>Starting date:</h7>
+    <input type="date" id="startdate" name="startdate" value="2020-05-11">
+    <h7>Ending date:</h7>
+    <input type="date" id="enddate" name="enddate" value="2020-05-11">
+    <br /><br />
+    <button type="submit" class="btn btn-primary" name="submit" value='6'>Submit new schedule</button>
+    </form>
+  </body>
+</html>
