@@ -15,6 +15,9 @@
   </head>
   <body>
     <h1>Your current schedule</h1>
+    <h5><%= scheduleData[0].scheduletype %></h5>
+    <h5><%= scheduleData[0].startdate %> - <%= scheduleData[0].enddate %></h5>
+    <br />
     <table class="table">
       <thead>
         <tr>
@@ -121,7 +124,7 @@
     <button type="submit" class="btn btn-primary" name="edit" value='3'>Edit current schedule</button>
     <br />
     <br />
-    <button type="submit" class="btn btn-primary" name="view" value='2'>View past schedules</button>
+    <button type="submit" class="btn btn-primary" name="view" value='2'>View all schedules</button>
   </form>
   </body>
 </html>

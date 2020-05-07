@@ -52,13 +52,13 @@ router.get('/', function(req, res, next) {
 				shiftArray.push(returnMWSshift(mwsData.rows[0].satshift));
 				shiftArray.push(returnMWSshift(mwsData.rows[0].sunshift));
 				console.log(shiftArray);
-				res.render('viewSchedulesPage', {shiftData: shiftArray});
+				res.render('viewSchedulesPage', {scheduleData: scheduleData.rows, shiftData: shiftArray});
 			});
 		}
 		else if (scheduleData.rows[0].scheduletype == "WEEKLY") {
 			wwsQuery = "SELECT * FROM WeeklyWorkSchedules WWS WHERE WWS.scheduleId = " + scheduleData.rows[0].scheduleid + ";";
 			pool.query(wwsQuery, (err, wwsData) => {
-				res.render('viewSchedulesPage', {shiftData: wwsData.rows[0].hourlyschedule});
+				res.render('viewSchedulesPage', {scheduleData: scheduleData.rows, shiftData: wwsData.rows[0].hourlyschedule});
 			});
 		}
 	})
@@ -72,6 +72,9 @@ router.post('/', function(req, res, next) {
 	if (typeof createSchedule != 'undefined') {
 		res.redirect('/newSchedulesPage');
 		// use radio buttons in table format to select
+	}
+	else if (typeof editCurrent != 'undefined') {
+		//
 	}
 	else if (typeof viewPast != 'undefined') {
 		res.redirect('/viewPastSchedulesPage');

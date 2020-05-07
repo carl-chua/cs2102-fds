@@ -18,54 +18,15 @@
         function getInputValue(){
             // Selecting the input element and get its value 
             if (document.getElementById("type").value == "mws") {
-              document.getElementById("mondaymws").style.display = "block";
-              document.getElementById("tuesdaymws").style.display = "block";
-              document.getElementById("wednesdaymws").style.display = "block";
-              document.getElementById("thursdaymws").style.display = "block";
-              document.getElementById("fridaymws").style.display = "block";
-              document.getElementById("saturdaymws").style.display = "block";
-              document.getElementById("sundaymws").style.display = "block";
-              document.getElementById("montext").style.display = "block";
-              document.getElementById("tuetext").style.display = "block";
-              document.getElementById("wedtext").style.display = "block";
-              document.getElementById("thutext").style.display = "block";
-              document.getElementById("fritext").style.display = "block";
-              document.getElementById("sattext").style.display = "block";
-              document.getElementById("suntext").style.display = "block";
+              document.getElementById("mwstable").style.display = "block";
               document.getElementById("wwstable").style.display = "none";
             }
             else if (document.getElementById("type").value == "wws") {
-              document.getElementById("mondaymws").style.display = "none";
-              document.getElementById("tuesdaymws").style.display = "none";
-              document.getElementById("wednesdaymws").style.display = "none";
-              document.getElementById("thursdaymws").style.display = "none";
-              document.getElementById("fridaymws").style.display = "none";
-              document.getElementById("saturdaymws").style.display = "none";
-              document.getElementById("sundaymws").style.display = "none";
-              document.getElementById("montext").style.display = "none";
-              document.getElementById("tuetext").style.display = "none";
-              document.getElementById("wedtext").style.display = "none";
-              document.getElementById("thutext").style.display = "none";
-              document.getElementById("fritext").style.display = "none";
-              document.getElementById("sattext").style.display = "none";
-              document.getElementById("suntext").style.display = "none";
+              document.getElementById("mwstable").style.display = "none";
               document.getElementById("wwstable").style.display = "block";
             }
             else {
-              document.getElementById("mondaymws").style.display = "none";
-              document.getElementById("tuesdaymws").style.display = "none";
-              document.getElementById("wednesdaymws").style.display = "none";
-              document.getElementById("thursdaymws").style.display = "none";
-              document.getElementById("fridaymws").style.display = "none";
-              document.getElementById("saturdaymws").style.display = "none";
-              document.getElementById("sundaymws").style.display = "none";
-              document.getElementById("montext").style.display = "none";
-              document.getElementById("tuetext").style.display = "none";
-              document.getElementById("wedtext").style.display = "none";
-              document.getElementById("thutext").style.display = "none";
-              document.getElementById("fritext").style.display = "none";
-              document.getElementById("sattext").style.display = "none";
-              document.getElementById("suntext").style.display = "none";
+              document.getElementById("mwstable").style.display = "none";
               document.getElementById("wwstable").style.display = "none";
             }
         }
@@ -82,6 +43,7 @@
     </select>
 
     <br /><br />
+    <div id="mwstable">
     <h7 id="montext">Monday:</h7>
     <select name="mondaymws" id="mondaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -90,7 +52,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-      <br />
+      <br /><br />
     <h7 id="tuetext">Tuesday:</h7>
     <select name="tuesdaymws" id="tuesdaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -99,7 +61,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-        <br />
+        <br /><br />
     <h7 id="wedtext">Wednesday:</h7>
     <select name="wednesdaymws" id="wednesdaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -108,7 +70,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-        <br />
+        <br /><br />
     <h7 id="thutext">Thursday:</h7>
     <select name="thursdaymws" id="thursdaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -117,7 +79,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-        <br />
+        <br /><br />
     <h7 id="fritext">Friday:</h7>
     <select name="fridaymws" id="fridaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -126,7 +88,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-        <br />
+        <br /><br />
     <h7 id="sattext">Saturday:</h7>
     <select name="saturdaymws" id="saturdaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -135,7 +97,7 @@
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
     </select>
-        <br />
+        <br /><br />
     <h7 id="suntext">Sunday:</h7>
     <select name="sundaymws" id="sundaymws">
       <option selected value="1">10am - 2pm, 3pm - 7pm</option>
@@ -143,9 +105,11 @@
       <option value="3">12am - 4pm, 5pm - 9pm</option>
       <option value="4">1pm - 5pm, 6pm - 10pm</option>
       <option value="null">Not working</option>
-    </select>    
+    </select>  
+    <br /><br />
+    </div>  
 
-      <table class="table" id="wwstable">
+      <table class="table collapse" id="wwstable">
       <thead>
         <tr>
           <th scope="col">Day</th>
