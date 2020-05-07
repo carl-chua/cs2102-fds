@@ -57,9 +57,25 @@
 						<% } %>
 					<% } %>
 					<td><%= orderData[i].deliveryfee%></td>
-					<td><%= orderData[i].timeplaced.toString().slice(0, 24)%></td>
-					<td><%= orderData[i].timeriderarrivesrestaurant.toString().slice(0, 24)%></td>
-					<td><%= orderData[i].timeriderleavesrestaurant.toString().slice(0, 24)%></td>
+					<% if (orderData[i].timeplaced == null) { %>
+					<td><%= orderData[i].timeplaced %></td>
+					<% } %>
+					<% if (orderData[i].timeplaced != null) { %>
+					<td><%= orderData[i].timeplaced.toString().slice(0, 24); %></td>
+					<% } %>
+					<% if (orderData[i].timeriderarrivesrestaurant == null) { %>
+					<td><%= orderData[i].timeriderarrivesrestaurant%></td>
+					<% } %>
+					<% if (orderData[i].timeriderarrivesrestaurant != null) { %>
+					<td><%= orderData[i].timeriderarrivesrestaurant.toString().slice(0,24);%></td>
+					<% } %>
+					<% if (orderData[i].timeriderleavesrestaurant == null) { %>
+					<td><%= orderData[i].timeriderleavesrestaurant%></td> 
+					<% } %>
+					<% if (orderData[i].timeriderleavesrestaurant != null) { %>
+					<td><%= orderData[i].timeriderleavesrestaurant.toString().slice(0,24);%></td> 
+					<% } %>
+
 				</tr>
 				<% } %>
 			</tbody>

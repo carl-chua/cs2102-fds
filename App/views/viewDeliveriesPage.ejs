@@ -36,9 +36,24 @@
           <td><%= ordersData[i].name%></td>
           <td><%= ordersData[i].raddress%></td>
           <td><%= ordersData[i].caddress%></td>
-          <td><%= ordersData[i].timeriderarrivesrestaurant.toString().slice(0, 24)%></td>
-          <td><%= ordersData[i].timeriderleavesrestaurant.toString().slice(0, 24)%></td>
-          <td><%= ordersData[i].timeriderdelivered.toString().slice(0, 24)%></td>
+          <% if (ordersData[i].timeriderarrivesrestaurant == null) { %>
+          <td><%= ordersData[i].timeriderarrivesrestaurant%></td>
+          <% } %>
+          <% if (ordersData[i].timeriderarrivesrestaurant != null) { %>
+          <td><%= ordersData[i].timeriderarrivesrestaurant.toString().slice(0,24);%></td>
+          <% } %>
+          <% if (ordersData[i].timeriderleavesrestaurant == null) { %>
+          <td><%= ordersData[i].timeriderleavesrestaurant%></td> 
+          <% } %>
+          <% if (ordersData[i].timeriderleavesrestaurant != null) { %>
+          <td><%= ordersData[i].timeriderleavesrestaurant.toString().slice(0,24);%></td> 
+          <% } %>
+          <% if (ordersData[i].timeriderdelivered == null) { %>
+          <td><%= ordersData[i].timeriderdelivered %></td>
+          <% } %>
+          <% if (ordersData[i].timeriderdelivered != null) { %>
+          <td><%= ordersData[i].timeriderdelivered.toString().slice(0, 24); %></td>
+          <% } %>
           <td><%= ordersData[i].deliveryfee%></td>
           <td><%= ordersData[i].deliveryrating%></td>
         </tr>

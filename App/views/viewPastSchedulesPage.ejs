@@ -32,8 +32,18 @@
 			<tbody>
 				<% for(var i=0; i<scheduleData.length; i++) { %>
 				<tr>
+					<% if (scheduleData[i].startdate == null) { %>
+					<td><%= scheduleData[i].startdate%></td>
+					<% } %>
+					<% if (scheduleData[i].startdate != null) { %>
 					<td><%= scheduleData[i].startdate.toString().slice(0, 15)%></td>
+					<% } %>
+					<% if (scheduleData[i].enddate == null) { %>
+					<td><%= scheduleData[i].enddate%></td>
+					<% } %>
+					<% if (scheduleData[i].enddate != null) { %>
 					<td><%= scheduleData[i].enddate.toString().slice(0, 15)%></td>
+					<% } %>
 					<td><%= scheduleData[i].scheduletype%></td>
 					<td><%= scheduleData[i].feeperdelivery%></td>
 					<td><%= scheduleData[i].noofdeliveries%></td>
