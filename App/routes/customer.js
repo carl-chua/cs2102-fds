@@ -17,14 +17,16 @@ var customerName;
 
 function getSQLuserData(customerId) {
 	return "SELECT * \
-	FROM Customers \
-	WHERE customerId = '" + customerId + "';";
+		FROM Customers \
+		WHERE customerId = '" + customerId + "';";
 }
 
 function updateSQLuserData(customerId, input) {
-	if (input.inputCardNo == "-") input.inputCardNo = "null";
+	if (input.inputCardNo === "-") input.inputCardNo = "null";
 	var passwordLine = "password = '" + input.inputPassword + "',";
-	if (input.password == '**********') passwordLine = "";
+	if (input.inputPassword == '-') {
+		passwordLine = "";
+	}
 	console.log("input:", input);
 	return "update customers set \
 		name = '" + input.inputName + "', \
@@ -32,7 +34,19 @@ function updateSQLuserData(customerId, input) {
 		" + passwordLine + " \
 		phoneno = " + input.inputPhoneNo + ", \
 		registeredcardno = '" + input.inputCardNo + "' \
-	where customerid = " + customerId + ";";
+		where customerid = " + customerId + ";";
+}
+
+function deactivateSQLcustomer(customerId) {
+	return "update Customers set \
+		isDeleted = true \
+		where customerid = " + customerId + ";";
+}
+
+function activateSQLcustomer(customerId) {
+	return "update Customers set \
+		isDeleted = false \
+		where customerid = " + customerId + ";";
 }
 
 function getSQLRestaurants() {
@@ -208,13 +222,26 @@ router.post('/editAccountDetails', function(req, res, next) {
 	});
 });
 router.post('/submitAccountDetails', function(req, res, next) {
-
 	var input = req.body;
 	var query = updateSQLuserData(customerId, input);
-	// console.log(query);
+	console.log(query);
 	pool.query(query, (err, data) => {
 		console.log(err)
 		res.redirect('/customer/accounts');
+	});
+});
+router.post('/deactivateAccount', function(req, res, next) {
+	pool.query(deactivateSQLcustomer(customerId), (err, data) => {
+		console.log(err)
+		res.redirect('/');
+	});
+});
+// hidden URL for reactivation
+// type: 
+// http://localhost:3000/customer/activateAccount?cid=4
+router.get('/activateAccount', function(req, res, next) {
+	pool.query(activateSQLcustomer(req.query.cid), (err, data) => {
+		res.redirect('/');
 	});
 });
 module.exports = router;
