@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Page Title -->
+    <title>Campaigns Page</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+
+    <!-- CSS for Styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <!-- JavaScript for Interactivity -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h1><%=title%></h1>
+    <h1>Active Campaigns</h1>
+    <table class="table">
+        <thead style="background-color: #90ee90">
+            <tr>
+                <th scope="col">Promo Code</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+                <th scope="col">Discount Type</th>
+                <th scope="col">Discount Amount</th>
+                <th scope="col">Min Spend</th>
+                <th scope="col">Applicable For</th>
+                <th scope="col">Days since last order</th>
+                <th scope="col">Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<active.length; i++) { %>
+            <tr>
+                <td><%= active[i].promocode%></td>
+                <td><%= active[i].startdatetime%></td>
+                <td><%= active[i].enddatetime%></td>
+                <td><%= active[i].discounttype%></td>
+                <td><%= active[i].discount%></td>
+                <td><%= active[i].minspend%></td>
+                <td><%= active[i].promoapplicablefor%></td>
+                <td><%= active[i].dayssincelastorder%></td>
+                <td><%= active[i].hours%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <h1>Inactive Campaigns</h1>
+    <table class="table">
+        <thead style="background-color: #FFFACD">
+            <tr>
+                <th scope="col">Promo Code</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+                <th scope="col">Discount Type</th>
+                <th scope="col">Discount Amount</th>
+                <th scope="col">Min Spend</th>
+                <th scope="col">Applicable For</th>
+                <th scope="col">Days since last order</th>
+                <th scope="col">Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<inactive.length; i++) { %>
+            <tr>
+                <td><%= inactive[i].promocode%></td>
+                <td><%= inactive[i].startdatetime%></td>
+                <td><%= inactive[i].enddatetime%></td>
+                <td><%= inactive[i].discounttype%></td>
+                <td><%= inactive[i].discount%></td>
+                <td><%= inactive[i].minspend%></td>
+                <td><%= inactive[i].promoapplicablefor%></td>
+                <td><%= inactive[i].dayssincelastorder%></td>
+                <td><%= inactive[i].hours%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <form id="html_form" action="/restaurantStaffHomePage/addCampaign" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="addCampaign" value="1">Add Campaign</button>
+    </form>
+    <br>
+    <form id="html_form" action="/restaurantStaffHomePage/editCampaign" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="editCampaign" value="1">Edit Campaign</button>
+    </form>
+    <br>
+    <form id="html_form" action="/restaurantStaffHomePage/deleteCampaign" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="deleteCampaign" value="1">Delete Campaign</button>
+    </form>
+
+</body>
+
+</html>

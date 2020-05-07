@@ -15,6 +15,7 @@
   </head>
   <body>
     <h1>Your schedule history</h1>
+    	<form id="html_form" action="/viewPastSchedulesPage" role="form" method="post">
 		<table class="table">
 			<thead>
 				<tr>
@@ -31,17 +32,19 @@
 			<tbody>
 				<% for(var i=0; i<scheduleData.length; i++) { %>
 				<tr>
-					<td><%= scheduleData[i].startdate%></td>
-					<td><%= scheduleData[i].enddate%></td>
+					<td><%= scheduleData[i].startdate.toString().slice(0, 15)%></td>
+					<td><%= scheduleData[i].enddate.toString().slice(0, 15)%></td>
 					<td><%= scheduleData[i].scheduletype%></td>
 					<td><%= scheduleData[i].feeperdelivery%></td>
 					<td><%= scheduleData[i].noofdeliveries%></td>
 					<td><%= (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries)%></td>
 					<td><%= scheduleData[i].basesalary%></td>
 					<td><%= (scheduleData[i].basesalary + (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries))%></td>
+					<td><button type="submit" class="btn btn-primary" name="orders" value='<%= scheduleData[i].scheduleid %>'>View completed deliveries</button></td>
 				</tr>
 				<% } %>
 			</tbody>
 		</table>
+		</form>
   </body>
 </html>

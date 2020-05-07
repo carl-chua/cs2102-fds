@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>CS2102 About Page</title>
+    <title>Your deliveries</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -14,10 +14,36 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>CS2102 <%= title%> Page</h1>
-    <p>Welcome to CS2102 About Page</p>
-    <br>
-    <br>
-    <h1><%= title%></h1>
+    <h1>Your deliveries</h1>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Order time</th>
+          <th scope="col">Restaurant name</th>
+          <th scope="col">Restaurant address</th>
+          <th scope="col">Customer address</th>
+          <th scope="col">Time arrived at restaurant</th>
+          <th scope="col">Time order collected</th>
+          <th scope="col">Time order delivered</th>
+          <th scope="col">Delivery fee</th>
+          <th scope="col">Delivery rating (if any)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for(var i=0; i<ordersData.length; i++) { %>
+        <tr>
+          <td><%= ordersData[i].timeplaced.toString().slice(0, 24)%></td>
+          <td><%= ordersData[i].name%></td>
+          <td><%= ordersData[i].raddress%></td>
+          <td><%= ordersData[i].caddress%></td>
+          <td><%= ordersData[i].timeriderarrivesrestaurant.toString().slice(0, 24)%></td>
+          <td><%= ordersData[i].timeriderleavesrestaurant.toString().slice(0, 24)%></td>
+          <td><%= ordersData[i].timeriderdelivered.toString().slice(0, 24)%></td>
+          <td><%= ordersData[i].deliveryfee%></td>
+          <td><%= ordersData[i].deliveryrating%></td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
   </body>
 </html>

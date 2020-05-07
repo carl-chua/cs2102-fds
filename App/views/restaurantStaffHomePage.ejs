@@ -26,40 +26,26 @@
     <h1>Restaurant Staff Homepage</h1>
     <br>
     <h2>Welcome <%=name%>!</h2>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Logged in as <%=name%></a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-item nav-link" href="#">Order <span class="sr-only">(current)</span></a>
-                <a class="nav-item nav-link" href="#">Past Orders and Reviews</a>
-                <a class="nav-item nav-link active" href="/restaurantStaffHomePage/orders">Orders</a>
-            </div>
-        </div>
-    </nav>
     <br>
     <form id="html_form" action="/restaurantStaffHomePage/orders" role="form" method="POST">
         <button type="submit" class="btn btn-primary" name="orders" value="1">View orders</button>
     </form>
+    <br>
     <form id="html_form" action="/restaurantStaffHomePage/menu" role="form" method="POST">
         <button type="submit" class="btn btn-primary" name="menu" value="1">View menu</button>
     </form>
+    <br>
     <form id="html_form" action="/restaurantStaffHomePage/statistics" role="form" method="POST">
         <button type="submit" class="btn btn-primary" name="statistics" value="1">View statistics</button>
     </form>
+    <br>
     <form id="html_form" action="/restaurantStaffHomePage/campaigns" role="form" method="POST">
-        <button type="submit" class="btn btn-primary" name="campaigns" value="1">View campigns</button>
+        <button type="submit" class="btn btn-primary" name="campaigns" value="1">View campaigns</button>
     </form>
     <br>
-    <button id="ordersButton" class="float-left submit-button">View Orders</button>
-    <script type="text/javascript">
-        document.getElementById("ordersButton").onclick = function () {
-            location.href = "/orders";
-        };
-    </script>
+    <form id="html_form" action="/restaurantStaffHomePage/admin" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="statistics" value="1">Admin Settings</button>
+    </form>
 </body>
 
 </html>

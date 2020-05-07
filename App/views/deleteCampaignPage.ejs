@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>Delete Item Page</title>
+    <title>Delete Campaign Page</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -17,17 +17,16 @@
 		<!-- <script src="javascripts/insertScript.js"></script> -->
   </head>
   <body>
-	<h1>Delete Item</h1>
+	<h1>Delete Campaign</h1>
 		<!--
 			action: the JS file to send data to
 			method: post
 		-->
-		<form id="html_form" action="deleteItem" role="form" method="post">
+		<form id="html_form" action="deleteCampaign" role="form" method="post">
 			<div class="form-group">
-				<label for="itemId">Enter Item ID:</label>
-                <input type="text" class="form-control" id="itemId" name="itemId" aria-describedby="itemIdHelp" placeholder="Enter the Item ID">
-				<br>
-			</div>
+				<label for="promoCode">Enter Promo Code:</label>
+				<input type="text" class="form-control" id="promoCode" name="promoCode" aria-describedby="promoCodeHelp" placeholder="Enter the Promo Code">
+            </div>
 			<button type="submit" class="btn btn-primary">Submit</button>
         </form>
 		
