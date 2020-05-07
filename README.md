@@ -13,6 +13,7 @@ Database name: project
 
 # Setting up Database
 Run the following commands to set up the database correctly
+```
 psql -U <postgres_role>
 CREATE DATABASE project;
 \c project
@@ -22,6 +23,7 @@ CREATE DATABASE project;
 
 # Run web server:
 Next, run the following set of commands relative from the home directory
+```
 cd App
 npm install
 node bin /www
