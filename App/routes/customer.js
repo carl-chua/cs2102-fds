@@ -149,6 +149,17 @@ function getOrderHistory(customerId) {
 	return query;
 }
 
+function getPromoDetails(inputPromoCode) {
+	inputPromoCode = inputPromoCode.trim();
+	query = 
+	"select * \
+	from ((promotionalcampaigns natural left join DeliveryServicePromotionalCampaigns) \
+		natural left join RestaurantPromotionalCampaigns) \
+		natural left join FoodItemPromotionalCampaigns \
+	where promoCode = '" + inputPromoCode + "';"
+	return query;
+}
+
 /* GET users listing. */
 router.get('/', function (req, res, next) {
 	customerTuple = req.session.message;
@@ -365,7 +376,38 @@ router.post('/confirmOrder', function (req, res, next) {
 });
 
 router.post('/checkPromo', function (req, res, next) {
-	res.send("check promo code not implemented!")
+	// res.send("check promo code not implemented!")
+	let inputPromoCode = req.body.inputPromoCode;
+	let query = getPromoDetails(inputPromoCode);
+	console.log(query);
+	pool.query(query, (err, data) => {
+		console.log("promo: ", data.rows);
+		if (data.rowCount == 0) {
+			console.log("promo doesn't exist")
+			res.redirect('/customers/confirmOrder');
+			return
+		}
+		res.send("check promo code not implemented!")
+		return 
+		let promo = data.rows[0]
+		if (promo.restaurantid != null  && promo.itemid != null) {
+			// FIPC has both rid and iid
+			// get qty of item in current order
+			// multiply dollar discount by qty
+			// update orders table & reload
+
+		} else if (promo.restaurantid != null) {
+			// RPC has only rid
+			// get order food subtotal
+			// get dollar discount
+			// update orders table & reload
+
+		} else {
+			// FDPC has managerid
+			
+		}
+
+	})
 });
 
 
@@ -479,8 +521,5 @@ router.get('/activateAccount', function(req, res, next) {
 		res.redirect('/');
 	});
 });
-
-
-
 
 module.exports = router;
