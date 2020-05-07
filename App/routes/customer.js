@@ -82,7 +82,7 @@ function getSQLFood(restaurantIdPicked) {
 // return order status as in schema
 function getSQLCurrentOrder(customerId) {
 	query = 
-	"select orderid, status, restaurantid\
+	"select * \
 	from Orders\
 	where customerId = " + customerId + "\
 	and status = 'CART';";
@@ -120,6 +120,27 @@ function deleteCurrentOrder(orderId) {
 	return query;
 }
 
+function insertSQLAddress(address) {
+	query = 
+	"INSERT INTO Locations values \
+	('" + address + "', 'area004'); "
+	return query;
+}
+
+function placeSQLOrder(address, cardNo, orderId) {
+	let addCardSentence = ""
+	if (cardNo != null) {
+		addCardSentence = "paymentCardNoIfUsed = '" + cardNo + "', ";
+	}
+	query = 
+	"UPDATE Orders SET \
+		" + addCardSentence +" \
+		timePlaced = '" + new Date(Date.now()).toISOString().replace('T',' ').replace('Z','') + "', \
+		address = '" + address + "' \
+	where orderId = " + orderId + ";"
+	return query
+}
+
 /* GET users listing. */
 router.get('/', function (req, res, next) {
 	customerTuple = req.session.message;
@@ -136,7 +157,7 @@ router.get('/orders', function (req, res, next) {
 	pool.query(getSQLCurrentOrder(customerId), (err, data) => {
 		console.log("current Orders:",data.rowCount);
 		if(data.rowCount == 1)  {
-			console.log(data);
+			// console.log(data);
 			restaurantIdPicked = data.rows[0].restaurantid;
 			currentOrderId = data.rows[0].orderid;
 			console.log("currentOrderId: ", currentOrderId);
@@ -242,8 +263,7 @@ router.post('/addItem', function (req, res, next) {
 			});
 		})
 	}
-
-	console.log("END");
+	console.log("Add Item ENDed");
 });
 
 router.post('/removeItem', function (req, res, next) {
@@ -293,8 +313,83 @@ router.post('/chooseFood', function (req, res, next) {
 	});
 });
 
+router.get('/history', function (req, res, next) {
+	res.send("history not implemented!");
+})
+
 router.post('/confirmOrder', function (req, res, next) {
-	res.send("hello" + req.body.confirm);
+	// res.send("hello" + req.body.confirm);
+	if (currentOrderId == null) {
+		res.redirect('/customer/orders');
+		return;
+	}
+
+ 	pool.query(getSQLPicks(customerId), (err, picksData) => {
+		pool.query(getSQLCurrentOrder(customerId), (err, order) => {
+			pool.query(getSQLuserData(customerId), (err, userData) => {
+				// console.log(err); 
+				// console.log(picksData);
+				var addresses = [
+					userData.rows[0].mostrecentaddress1,
+					userData.rows[0].mostrecentaddress2,
+					userData.rows[0].mostrecentaddress3,
+					userData.rows[0].mostrecentaddress4,
+					userData.rows[0].mostrecentaddress5
+				];
+				var addressDisplay = [];
+				for (i = 0; i<addresses.length; i++) {
+					if (addresses[i] != null) {
+						addressDisplay.push(addresses[i])
+					}
+				}
+				console.log("addresDisplay: ",addressDisplay);
+				res.render('customerOrderConfirmPage', {
+					userName: customerName,
+					picksData: picksData.rows,
+					addresses: addressDisplay,
+					cardNo: userData.rows[0].registeredcardno
+				});
+			});
+		})
+ 	})
+});
+
+router.post('/checkPromo', function (req, res, next) {
+	res.send("check promo code not implemented!")
+});
+
+
+router.post('/placeOrder', function (req, res, next) {
+	
+	let newAddress = req.body.newAddress
+	let oldAddress = req.body.oldAddress
+	let paymentType = req.body.paymentType == 1 ? 'CASH' : 'CARD'
+	let deliveryAddress;
+	
+	if (newAddress != "") {
+		deliveryAddress = newAddress;
+	} else {
+		deliveryAddress = oldAddress;
+	}
+	
+	console.log("newAddress: ", newAddress)
+	console.log("oldAddress: ", oldAddress)
+	console.log("delivery address:", deliveryAddress)
+	pool.query(insertSQLAddress(deliveryAddress), (err, data) => {
+		console.log("insertAdd: ", err);
+		pool.query(getSQLuserData(customerId), (err, userData) => {
+			let cardNo = userData.rows[0].registeredcardno;
+			query = placeSQLOrder(deliveryAddress, paymentType == 'CARD' ? cardNo : null, currentOrderId);
+			console.log(query);
+			pool.query(query, (err, data) => {
+				console.log("orderPlaced: ", err);
+				if (err == null) {
+					currentOrderId == null;
+				}
+				res.redirect('/customer/history');
+			})
+		})
+	})
 });
 
 
@@ -302,7 +397,7 @@ router.post('/confirmOrder', function (req, res, next) {
 
 router.get('/accounts', function (req, res, next) {
 	pool.query(getSQLuserData(customerId), (err, userData) => {
-		// console.log(userData.rows[0]);
+		console.log(userData.rows[0]);
 		var name = userData.rows[0].name;
 		var email = userData.rows[0].email;
 		var password = '**********';
