@@ -17,7 +17,7 @@ router.get('/', function (req, res, next) {
 router.post('/', function (req, res, next) {
     var navigation = req.body.navigation;
     if (navigation == '1') {
-        res.redirect();
+        res.redirect("statisticsOne");
     } else if (navigation == '2') {
         res.redirect();
     } else if (navigation == '3') {

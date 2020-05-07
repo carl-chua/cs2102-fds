@@ -29,6 +29,7 @@ var createFDPCPageRouter = require("./routes/createFDPCPage");
 var viewStatisticsHomePageRouter = require("./routes/viewStatisticsHomePage");
 var menuRouter = require("./routes/menu");
 var addItemRouter = require("./routes/addItem");
+var statisticsOneRouter = require("./routes/statisticsOne");
 
 var app = express();
 
@@ -66,6 +67,7 @@ app.use("/createFDPCPage", createFDPCPageRouter);
 app.use("/viewStatisticsHomePage", viewStatisticsHomePageRouter);
 app.use("/menu", menuRouter);
 app.use("/addItem", addItemRouter);
+app.use("/statisticsOne", statisticsOneRouter);
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

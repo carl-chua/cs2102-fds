@@ -35,9 +35,13 @@
             </tr>
         </thead>
         <tbody>
-            <% for(var i=0; i<FDPCData.length; i++) { %>
+            <% for(var i=0; i<statisticsOneData.length; i++) { %>
             <tr>
-
+                <td><%= statisticsOneData[i].year%></td>
+                <td><%= statisticsOneData[i].month%></td>
+                <td><%= statisticsOneData[i].newcustomers%></td>
+                <td><%= statisticsOneData[i].totalnumberoforders%></td>
+                <td><%= statisticsOneData[i].totalordercost.toFixed(2)%></td>
             </tr>
             <% } %>
         </tbody>
