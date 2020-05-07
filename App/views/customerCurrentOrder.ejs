@@ -24,21 +24,22 @@
 
 <body>
     <h1>PandaFood</h1>
-	<br />
-	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
-		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-			aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
-		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-			<div class="navbar-nav">
-				<a class="nav-item nav-link active" href="/customer">Order <span class="sr-only">(current)</span></a>
-				<a class="nav-item nav-link" href="/customer">Past Orders and Reviews</a>
-				<a class="nav-item nav-link" href="/customer/accounts">Accounts</a>
-			</div>
-		</div>
-	</nav>
+    <br />
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Logged in as <%= userName%></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-item nav-link active" href="/customer/orders">Order <span
+                        class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link" href="/customer/history">Past Orders and Reviews</a>
+                <a class="nav-item nav-link" href="/customer/accounts">Accounts</a>
+            </div>
+        </div>
+    </nav>
     <br />
     <h2>Order ID:</h2>
     <table class="table">
@@ -73,10 +74,18 @@
     <br />
     <% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
     <h5>Total price: $<%= j %></h5>
-    <form id="html_form" action="/customerHomePage" role="form" method="post">
+    <form id="html_form" action="/customer/confirmOrder" role="form" method="post">
         <button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
     </form>
     <br />
+    <form id="html_form" action="/customer/deleteCurrentOrder" role="form" method="post">
+        <button type="submit" class="btn btn-light btn-lg btn-block" name="add" value='<%= foodData[i].itemid%>'>Forfeit Current Order and Go Back to
+            Restaurant Selection</button>
+    </form>
+    <br />
+    <div class="alert alert-warning collapse" role="alert" id="loginAlert">
+        Either the user account does not exist or the password is incorrect.
+    </div>
     <br />
     <h2>Pick Some Food!</h2>
     <br />
@@ -95,13 +104,13 @@
         <tbody>
             <% for(var i=0; i<foodData.length; i++) { %>
             <tr>
-                <form id="html_form" action="/customerHomePage" role="form" method="post">
-                    
+                <form id="html_form" action="/customer/addItem" role="form" method="post">
+
                     <td><%= foodData[i].itemname%></td>
                     <td><%= foodData[i].price%></td>
                     <td><%= foodData[i].category%></td>
                     <td><%= foodData[i].rating%></td>
-                    <td><input type="number" name="submitQty" min="1" step="1"></td>
+                    <td><input type="number" class="col-sm-3" name="itemQty" min="1" step="1"></td>
                     <td><button type="submit" class="btn btn-primary" name="add"
                             value='<%= foodData[i].itemid%>'>Select</button></td>
                 </form>

@@ -416,7 +416,7 @@ CREATE TABLE Picks (
 	orderId integer,
 	itemId integer,
     qtyOrdered integer not null check (qtyOrdered >= 0),
-	foreign key (orderId) references Orders(orderId),
+	foreign key (orderId) references Orders(orderId) ON DELETE CASCADE,
 	foreign key (itemId) references FoodMenuItems(itemId),
 	primary key (orderId, itemId)
     -- no FDs
