@@ -3,7 +3,7 @@
 
 <head>
 	<!-- Page Title -->
-	<title>Confirm order</title>
+	<title>Customer Home Page</title>
 	<link rel='stylesheet' href='/stylesheets/style.css' />
 
 	<!-- CSS for Styling -->
@@ -23,6 +23,7 @@
 </head>
 
 <body>
+	<h1>PandaFood</h1>
 	<br />
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
 		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
@@ -32,45 +33,36 @@
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 			<div class="navbar-nav">
-				<a class="nav-item nav-link active" href="/customer/orders">Order <span class="sr-only">(current)</span></a>
+				<a class="nav-item nav-link" href="/customer/orders">Order <span class="sr-only">(current)</span></a>
 				<a class="nav-item nav-link" href="/customer/history">Past Orders and Reviews</a>
-				<a class="nav-item nav-link" href="/customer/accounts">Accounts</a>
+				<a class="nav-item nav-link active" href="/customer/accounts">Accounts</a>
 			</div>
 		</div>
 	</nav>
-	<h2>Your order:</h2>
-	<table class="table">
-		<thead>
-			<tr>
-				<th scope="col">Restaurant</th>
-				<th scope="col">Item</th>
-				<th scope="col">Price</th>
-				<th scope="col">Quantity selected</th>
-				<th scope="col">Total item price</th>
-			</tr>
-		</thead>
-		<tbody>
-			<% for(var i=0; i<picksData.length; i++) { %>
-			<tr>
-				<td><%= picksData[i].rname%></td>
-				<td><%= picksData[i].iname%></td>
-				<td><%= picksData[i].price%></td>
-				<td><%= picksData[i].qtyordered%></td>
-				<td><%= picksData[i].sumprice%></td>
-			</tr>
-			<% } %>
-		</tbody>
-	</table>
-	<% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
-	<h5>Subtotal: $<%= j %></h5>
 	<br />
+	<form autocomplete="off" method="POST" action="/customer/submitAccountDetails">
+		<div class="form-group">
+		  <label for="exampleInputEmail1">Name</label>
+		  <input type="text" class="form-control" name="inputName" autocomplete="off" value="<%= userName%>">
+		</div>
+		<div class="form-group">
+		  <label for="exampleInputEmail1">Email Address</label>
+		  <input type="email" class="form-control" name="inputEmail" autocomplete="off" value="<%= email%>">
+		</div>
+		<div class="form-group">
+		  <label for="exampleInputPassword1">Password</label>
+		  <input type="password" class="form-control" name="inputPassword" autocomplete="new-password" value="-">
+		</div>
+		<div class="form-group">
+			<label for="exampleInputEmail1">Phone Number</label>
+			<input type="text" class="form-control" name="inputPhoneNo" autocomplete="off" value="<%= phoneNo%>">
+		  </div>
+		  <div class="form-group">
+			<label for="exampleInputEmail1">Registered Card Number</label>
+			<input type="text" class="form-control" name="inputCardNo" autocomplete="off" value="<%= registeredCard%>">
+		  </div>
+		<button type="submit" class="btn btn-primary">Submit</button>
+	  </form>
+
 	<br />
-	<h4>Promo code (if any):</h4>
-	<form id="html_form" action="/customerOrderConfirmPage" role="form" method="post">
-		<input type="text" id="promocode" name="promocode">
-		<br /><br />
-		<h4>Credit card number</h4>
-		<h6>(Leave empty to pay by cash)</h6>
-		<input type="text" id="promocode" name="promocode">
-	</form>
 </body>

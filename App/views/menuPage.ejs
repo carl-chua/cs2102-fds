@@ -54,22 +54,37 @@
             <% } %>
         </tbody>
     </table>
-    <form id="Add Item" action="insert" role="form" method="post">
-        <button type="submit" class="btn btn-primary">Add Item</button>
+    <form id="html_form" action="/restaurantStaffHomePage/addItem" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="addItem" value="1">Add Item</button>
     </form>
     <br>
-    <form id="" action="insert" role="form" method="post">
-        <button type="submit" class="btn btn-primary">Edit Item</button>
+    <form id="html_form" action="/restaurantStaffHomePage/editItem" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="editItem" value="1">Edit Item</button>
     </form>
     <br>
-    <form id="html_form" action="insert" role="form" method="post">
-        <button type="submit" class="btn btn-primary">Delete Item</button>
+    <form id="html_form" action="/restaurantStaffHomePage/deleteItem" role="form" method="GET">
+        <button type="submit" class="btn btn-primary" name="deleteItem" value="1">Delete Item</button>
     </form>
     <br>
-    <button id="myButton" class="float-left submit-button" >Home</button>
+    <br>
+    <button id="Add Item 2" class="float-left submit-button" >Add Item</button>
     <script type="text/javascript">
-        document.getElementById("myButton").onclick = function () {
-            location.href = "/addItem";
+        document.getElementById("Add Item 2").onclick = function () {
+            location.href = "/restaurantStaffHomePage/addItem";
+        };
+    </script>
+    <br>
+    <button id="Edit Item 2" class="float-left submit-button" >Edit Item</button>
+    <script type="text/javascript">
+        document.getElementById("Edit Item 2").onclick = function () {
+            location.href = "/restaurantStaffHomePage/editItem";
+        };
+    </script>
+    <br>
+    <button id="Delete Item 2" class="float-left submit-button" >Delete Item</button>
+    <script type="text/javascript">
+        document.getElementById("Delete Item 2").onclick = function () {
+            location.href = "/restaurantStaffHomePage/deleteItem";
         };
     </script>
 </body>

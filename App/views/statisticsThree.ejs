@@ -3,7 +3,7 @@
 
 <head>
     <!-- Page Title -->
-    <title>Number of new customers, total number of orders and total cost of orders per month</title>
+    <title>Total number of orders placed at a location per hour</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 
     <!-- CSS for Styling -->
@@ -23,25 +23,29 @@
 </head>
 
 <body>
-    <h1>Number of new customers, total number of orders and total cost of orders per month</h1>
+    <h1>Total number of orders placed at a location per hour</h1>
     <table class="table">
         <thead>
             <tr>
                 <th scope="col">Year</th>
                 <th scope="col">Month</th>
-                <th scope="col">Total New Customers</th>
-                <th scope="col">Total Number of Orders</th>
-                <th scope="col">Total Cost of all Orders</th>
+                <th scope="col">Day</th>
+                <th scope="col">Hour</th>
+                <th scope="col">Area</th>
+                <th scope="col">Total number of orders</th>
+                <th scope="col">Total cost of orders</th>
             </tr>
         </thead>
         <tbody>
-            <% for(var i=0; i<statisticsOneData.length; i++) { %>
+            <% for(var i=0; i<statisticsThreeData.length; i++) { %>
             <tr>
-                <td><%= statisticsOneData[i].year%></td>
-                <td><%= statisticsOneData[i].month%></td>
-                <td><%= statisticsOneData[i].newcustomers%></td>
-                <td><%= statisticsOneData[i].totalnumberoforders%></td>
-                <td><%= statisticsOneData[i].totalordercost%></td>
+                <td><%= statisticsThreeData[i].year%></td>
+                <td><%= statisticsThreeData[i].month%></td>
+                <td><%= statisticsThreeData[i].day%></td>
+                <td><%= statisticsThreeData[i].hour%></td>
+                <td><%= statisticsThreeData[i].area%></td>
+                <td><%= statisticsThreeData[i].totalnumberoforders%></td>
+                <td><%= statisticsThreeData[i].totalordercost%></td>
             </tr>
             <% } %>
         </tbody>

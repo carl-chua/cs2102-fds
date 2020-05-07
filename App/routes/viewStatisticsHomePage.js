@@ -19,11 +19,11 @@ router.post('/', function (req, res, next) {
     if (navigation == '1') {
         res.redirect("statisticsOne");
     } else if (navigation == '2') {
-        res.redirect();
+        res.redirect("statisticsTwo");
     } else if (navigation == '3') {
-        res.redirect();
+        res.redirect("statisticsThree");
     } else {
-        res.redirect();
+        res.redirect("statisticsFour");
     }
 });
 

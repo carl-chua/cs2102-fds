@@ -16,6 +16,11 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+/* GET home page. */
+router.get('/invalidLogin', function(req, res, next) {
+	res.render('indexInvalidLogin', { title: 'Express' });
+  });  
+
 
 // retrieving information from index.ejs page
 // POST
@@ -31,21 +36,44 @@ router.post('/', function(req, res, next) {
 	var user_query;
 
 	if (customerVal == 1) {
-		user_query = "SELECT customerId, name FROM Customers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT customerId, name \
+			FROM Customers \
+			WHERE email = '" + email + "' \
+			AND password = '" + password + "' \
+			AND isDeleted = false;";
 	}
 	else if (riderVal == 2) {
-		user_query = "SELECT riderId FROM DeliveryRiders WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT riderId \
+			FROM DeliveryRiders \
+			WHERE email = '" + email + "' \
+			AND password = '" + password + "' \
+			AND isDeleted = false;";
 	}
 	else if (staffVal == 3) {
-		user_query = "SELECT restaurantStaffId, name FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT restaurantStaffId, name, restaurantId\
+			FROM RestaurantStaffs \
+			WHERE email = '" + email + "'\
+			AND password = '" + password + "' \
+			AND isDeleted = false;";
 	}
 	else if (managerVal == 4) {
-		user_query = "SELECT FDSManagerId FROM FoodDeliveryServiceManagers WHERE email = '" + email + "' AND password = '" + password + "';";
+		user_query = "SELECT FDSManagerId \
+			FROM FoodDeliveryServiceManagers \
+			WHERE email = '" + email + "' \
+			AND password = '" + password + "' \
+			AND isDeleted = false;";
 	}
 
 	// Construct Specific SQL Query
 	pool.query(user_query, (err, data) => {
 		// do error handling if possible
+		
+		// console.log ("data: ", data);
+		if (data.rowCount == 0) {
+			res.redirect('/invalidlogin');
+			return
+		}
+
 		if (customerVal == 1) {
 			req.session.message = data.rows[0];
 			res.redirect('/customer');
@@ -57,6 +85,7 @@ router.post('/', function(req, res, next) {
 		else if (staffVal == 3) {
 			req.session.staffId = data.rows[0].restaurantstaffid;
 			req.session.name = data.rows[0].name;
+			req.session.restaurantId = data.rows[0].restaurantid;
 			res.redirect('restaurantStaffHomePage');
 		}
 		else if (managerVal == 4) {

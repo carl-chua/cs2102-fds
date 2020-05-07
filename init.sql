@@ -416,7 +416,7 @@ CREATE TABLE Picks (
 	orderId integer,
 	itemId integer,
     qtyOrdered integer not null check (qtyOrdered >= 0),
-	foreign key (orderId) references Orders(orderId),
+	foreign key (orderId) references Orders(orderId) ON DELETE CASCADE,
 	foreign key (itemId) references FoodMenuItems(itemId),
 	primary key (orderId, itemId)
     -- no FDs
@@ -770,18 +770,32 @@ CREATE TRIGGER code_user_trigger
 	-- promoCode can only be selected after order items are confirmed
 CREATE OR REPLACE FUNCTION code_valuation() RETURNS TRIGGER AS $$
 DECLARE
+    promoType promoTypeEnum;
 	discountType discountTypeEnum;
 	discount numeric(10, 2);
+    promoItemId integer;
+    itemPrice numeric(10, 2);
 BEGIN
-	SELECT PC.discountType, PC.discount INTO discountType, discount
+	SELECT PC.discountType, PC.discount, PC.promoType INTO discountType, discount, promoType
 	FROM PromotionalCampaigns PC
 	WHERE NEW.promoCode = PC.promoCode;
 
-	-- what about free-delivery discounts?
 	IF discountType = 'PERCENT' THEN
-		NEW.promoDiscount = (discount / 100.0) * NEW.foodSubTotal;
+        IF promoType = 'RPC' OR promoType = 'FDPC' THEN
+            NEW.promoDiscount = (discount / 100.0) * NEW.foodSubTotal;
+        ELSIF promoType = 'FIPC' THEN
+            SELECT FIPC.itemId INTO promoItemId
+            FROM FoodItemPromotionalCampaigns FIPC
+            WHERE FIPC.promoCode = NEW.promoCode;
+
+            SELECT FMI.price INTO itemPrice
+            FROM FoodMenuItems FMI
+            WHERE FMI.itemId = promoItemId;
+
+            NEW.promoDiscount = (discount / 100.0) * itemPrice; 
+        END IF;
 	ELSIF discountType = 'DOLLAR' THEN
-		NEW.promoDiscount = discount;
+        NEW.promoDiscount = discount;
 	END IF;
 	RETURN NEW;
 END;
@@ -831,6 +845,7 @@ DECLARE
 	riderChosenId integer;
 	deliveryFee numeric(10, 2);
 	monthlyShift integer;
+    discountType discountTypeEnum;
 BEGIN
 	SELECT DR.riderId, S.feePerDelivery INTO riderChosenId, deliveryFee
 	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
@@ -870,7 +885,17 @@ BEGIN
 	WHERE riderId = riderChosenId;
 
 	NEW.riderId = riderChosenId;
-	NEW.deliveryFee = deliveryFee;
+
+    SELECT PC.discountType INTO discountType
+    FROM PromotionalCampaigns PC
+    WHERE PC.promoCode = NEW.promoCode;
+
+    IF discountType = 'FREE-DELIVERY' THEN
+        NEW.deliveryFee = 0;
+    ELSE
+        NEW.deliveryFee = deliveryFee;
+    END IF;
+
 	NEW.timeRiderAccepts = NEW.timePlaced; -- change to NOW() later
 	RETURN NEW;
 END;
