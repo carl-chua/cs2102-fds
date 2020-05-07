@@ -843,11 +843,10 @@ CREATE TRIGGER order_confirmation_trigger
 CREATE OR REPLACE FUNCTION allocate_rider() RETURNS TRIGGER AS $$
 DECLARE
 	riderChosenId integer;
-	deliveryFee numeric(10, 2);
 	monthlyShift integer;
     discountType discountTypeEnum;
 BEGIN
-	SELECT DR.riderId, S.feePerDelivery INTO riderChosenId, deliveryFee
+	SELECT DR.riderId INTO riderChosenId
 	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
 						   LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
 						   FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
@@ -889,12 +888,6 @@ BEGIN
     SELECT PC.discountType INTO discountType
     FROM PromotionalCampaigns PC
     WHERE PC.promoCode = NEW.promoCode;
-
-    IF discountType = 'FREE-DELIVERY' THEN
-        NEW.deliveryFee = 0;
-    ELSE
-        NEW.deliveryFee = deliveryFee;
-    END IF;
 
 	NEW.timeRiderAccepts = NEW.timePlaced; -- change to NOW() later
 	RETURN NEW;
