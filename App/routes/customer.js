@@ -15,10 +15,24 @@ var orderId;
 var customerId;
 var customerName;
 
-function getSQLCustomer(customerId) {
+function getSQLuserData(customerId) {
 	return "SELECT * \
 	FROM Customers \
 	WHERE customerId = '" + customerId + "';";
+}
+
+function updateSQLuserData(customerId, input) {
+	if (input.inputCardNo == "-") input.inputCardNo = "null";
+	var passwordLine = "password = '" + input.inputPassword + "',";
+	if (input.password == '**********') passwordLine = "";
+	console.log("input:", input);
+	return "update customers set \
+		name = '" + input.inputName + "', \
+		email = '" + input.inputEmail + "', \
+		" + passwordLine + " \
+		phoneno = " + input.inputPhoneNo + ", \
+		registeredcardno = '" + input.inputCardNo + "' \
+	where customerid = " + customerId + ";";
 }
 
 function getSQLRestaurants() {
@@ -142,8 +156,65 @@ router.post('/confirmOrder', function (req, res, next) {
 	res.send("hello" + req.body.confirm);
 });
 router.get('/accounts', function (req, res, next) {
-	res.send("accoutns");
-	res.render('customerAccountsPage', { userData: email })
-});
+	// res.send("accoutns");
+	
+	pool.query(getSQLuserData(customerId), (err, userData) => {
+		// console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+		var phoneNo = userData.rows[0].phoneno;
+		var registeredCard = userData.rows[0].registeredcardno;
+		var rewardPoints = userData.rows[0].rewardpoints;
 
+		if (registeredCard == null) {
+			registeredCard = '-';
+		}
+
+		res.render('customerAccountPage', { 
+			customerId: customerId,
+			userName: name,
+			email: email,
+			password: password,
+			phoneNo: phoneNo,
+			registeredCard: registeredCard,
+			rewardPoints: rewardPoints
+		});
+	});
+});
+router.post('/editAccountDetails', function(req, res, next) {
+	pool.query(getSQLuserData(customerId), (err, userData) => {
+		// console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+		var phoneNo = userData.rows[0].phoneno;
+		var registeredCard = userData.rows[0].registeredcardno;
+		var rewardPoints = userData.rows[0].rewardpoints;
+
+		if (registeredCard == null) {
+			registeredCard = '-';
+		}
+
+		res.render('customerAccountEditPage', { 
+			customerId: customerId,
+			userName: name,
+			email: email,
+			password: password,
+			phoneNo: phoneNo,
+			registeredCard: registeredCard,
+			rewardPoints: rewardPoints
+		});
+	});
+});
+router.post('/submitAccountDetails', function(req, res, next) {
+
+	var input = req.body;
+	var query = updateSQLuserData(customerId, input);
+	// console.log(query);
+	pool.query(query, (err, data) => {
+		console.log(err)
+		res.redirect('/customer/accounts');
+	});
+});
 module.exports = router;
