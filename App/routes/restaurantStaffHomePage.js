@@ -141,10 +141,10 @@ function getTotalSalesQuery(restaurantId) {
     " AND (o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED')";
 }
 function getActiveCampaignsQuery(restaurantId) {
-  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = true UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = true";
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, ((pc.enddatetime - pc.startdatetime) * 24) as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = true UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, ((pc.enddatetime - pc.startdatetime) * 24) as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = true";
 }
 function getInactiveCampaignsQuery(restaurantId) {
-  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = false UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = false";
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, ((pc.enddatetime - pc.startdatetime) * 24) as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = false UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, ((pc.enddatetime - pc.startdatetime) * 24) as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = false";
 }
 function getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder) {
   return "INSERT INTO PROMOTIONALCAMPAIGNS VALUES('" +
@@ -349,10 +349,6 @@ router.use("/statistics", function (req, res, next) {
 router.use("/campaigns", function (req, res, next) {
   pool.query(getActiveCampaignsQuery(restaurantId), (err1, activeData) => {
     pool.query(getInactiveCampaignsQuery(restaurantId), (err2, inactiveData) => {
-      console.log("restaurantID: ", restaurantId);
-      console.log("SQL query: ", activeData);
-      console.log(err1);
-      console.log(err2);
       res.render("campaignsPage", {
         title: "Campaigns Page",
         active: activeData.rows,
