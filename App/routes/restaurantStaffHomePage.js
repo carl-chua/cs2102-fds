@@ -251,7 +251,8 @@ router.use("/orders", function (req, res, next) {
   });
 });
 
-router.use("/toPreparing", function (req, res, next) {
+router.use("/toPreparing", function (req, res, next) {]
+  var orderId = req.body.orderId;
   pool.query(getChangeOrderStatusToPreparingQuery(orderId), (err, data) => {
     console.log(err);
     res.redirect("/restaurantStaffHomePage/orders");
@@ -259,6 +260,7 @@ router.use("/toPreparing", function (req, res, next) {
 });
 
 router.use("/toCompleted", function (req, res, next) {
+  var orderId = req.body.orderId;
   pool.query(getChangeOrderStatusToCompletedQuery(orderId), (err, data) => {
     console.log(err);
     res.redirect("/restaurantStaffHomePage/orders");
