@@ -130,34 +130,37 @@ function getTotalSalesQuery(restaurantId) {
     " AND (o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED')";
 }
 function getActiveCampaignsQuery(restaurantId) {
-  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
-  FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc\
-  ON pc.promocode = rpc.promocode \
-  WHERE rpc.restaurantid = " +
-  restaurantId +
-  " AND pc.isactive = true" + 
-  "UNION " +
-  "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
-  FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc\
-  ON pc.promocode = fipc.promocode \
-  WHERE fipc.restaurantid = " +
-  restaurantId +
-  " AND pc.isactive = true";
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = true UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = true";
+  // return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
+  // FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc \
+  // ON pc.promocode = rpc.promocode \
+  // WHERE rpc.restaurantid = " +
+  // restaurantId +
+  // " AND pc.isactive = true" +
+  // "UNION " +
+  // "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
+  // FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc \
+  // ON pc.promocode = fipc.promocode \
+  // WHERE fipc.restaurantid = " +
+  // restaurantId +
+  // " AND pc.isactive = true";
 }
 function getInactiveCampaignsQuery(restaurantId) {
-  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
-  FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc \
-  ON pc.promocode = rpc.promocode \
-  WHERE rpc.restaurantid = " +
-  restaurantId +
-  " AND pc.isactive = false" +
-  "UNION " +
-  "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
-  FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc\
-  ON pc.promocode = fipc.promocode \
-  WHERE fipc.restaurantid = " +
-  restaurantId +
-  " AND pc.isactive = false";
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = false UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = false";
+
+  // return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
+  // FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc \
+  // ON pc.promocode = rpc.promocode \
+  // WHERE rpc.restaurantid = " +
+  // restaurantId +
+  // " AND pc.isactive = false" +
+  // "UNION " +
+  // "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours \
+  // FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc \
+  // ON pc.promocode = fipc.promocode \
+  // WHERE fipc.restaurantid = " +
+  // restaurantId +
+  // " AND pc.isactive = false";
 }
 function getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder) {
   return "INSERT INTO PROMOTIONALCAMPAIGNS VALUES('" +
@@ -225,26 +228,13 @@ function getDeleteCampaignQuery(promoCode) {
   promoCode;
 }
 
-/* SQL Queries */
-//SQl only uses single quotes
-// var pendingOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'PENDING' ORDER BY o.timeplaced";
-// var preparingOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'PREPARING' ORDER BY o.timeplaced";
-// var completedOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED' ORDER BY o.timeplaced";
-// var earningsTodayQuery =
-//   "SELECT SUM(o.foodsubtotal) as earnings FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid GROUP BY o.orderid";
-// var menuQuery =
-//   "SELECT f.itemid, f.category, f.name, f.price, f.qtyorderedtoday, f.dailylimit, f.isselling, f.isavailabletoday, f.rating FROM FOODMENUITEMS f WHERE f.restaurantid = " +
-//   restaurantId +
-//   " ORDER BY f.category";
+function getEditMinSpendQuery(restaurantId, minSpend) {
+  return "UPDATE RESTAURANTS \
+  SET minSpend = " +
+  minSpend +
+  " WHERE restaurantId = " +
+  restaurantId;
+}
 
 router.get("/", function (req, res, next) {
   //values are passed in from index.js
@@ -356,10 +346,12 @@ router.use("/statistics", function (req, res, next) {
 });
 
 router.use("/campaigns", function (req, res, next) {
-  pool.query(getActiveCampaignsQuery(restaurantId), (err, activeData) => {
-    pool.query(getInactiveCampaignsQuery(restaurantId), (err, inactiveData) => {
-      console.log("this: ", inactiveData);
-      console.log(err);
+  pool.query(getActiveCampaignsQuery(restaurantId), (err1, activeData) => {
+    pool.query(getInactiveCampaignsQuery(restaurantId), (err2, inactiveData) => {
+      console.log("restaurantID: ", restaurantId);
+      console.log("SQL query: ", activeData);
+      console.log(err1);
+      console.log(err2);
       res.render("campaignsPage", {
         title: "Campaigns Page",
         active: activeData.rows,
@@ -434,6 +426,21 @@ router.post("/deleteCampaign", function (req, res, next) {
     res.redirect("/campaigns");
   });
 });
+
+
+router.get("/admin", function (req, res, next) {
+  res.render("adminPage", { title: "Admin Page" });
+});
+
+router.post("/admin", function (req, res, next) {
+  var minSpend = req.body.minSpend;
+  pool.query(getEditMinSpendQuery(restaurantId, minSpend), (err, data) => {
+    console.log(err);
+    res.redirect("/");
+  });
+});
+
+
 
 
 
