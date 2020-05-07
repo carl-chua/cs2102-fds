@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Page Title -->
+	<title>Confirm order</title>
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+
+	<!-- CSS for Styling -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+		integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+	<!-- JavaScript for Interactivity -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+		integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+		integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+		crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+		integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+		crossorigin="anonymous"></script>
+</head>
+
+<body>
+	<br />
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+			aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+			<div class="navbar-nav">
+				<a class="nav-item nav-link active" href="/customer/orders">Order <span
+						class="sr-only">(current)</span></a>
+				<a class="nav-item nav-link" href="/customer/history">Past Orders and Reviews</a>
+				<a class="nav-item nav-link" href="/customer/accounts">Accounts</a>
+			</div>
+		</div>
+	</nav>
+	<br>
+	<br>
+	<h2>Your order:</h2>
+	
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Order Number</th>
+				<th scope="col">Food SubTotal</th>
+				<th scope="col">Delivery Fee</th>
+				<th scope="col">Promo Code</th>
+				<th scope="col">Promo Discount</th>
+				<th scope="col">Order Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			<% for(var i=0; i<picksData.length; i++) { %>
+			<tr>
+				<td><%= picksData[i].rname%></td>
+				<td><%= picksData[i].iname%></td>
+				<td><%= picksData[i].price%></td>
+				<td><%= picksData[i].qtyordered%></td>
+				<td><%= picksData[i].sumprice%></td>
+			</tr>
+			<% } %>
+		</tbody>
+	</table>
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Date & Time Placed</th>
+				<th scope="col">Date & Time Delivered</th>
+				<th scope="col">Delivery Address </th>
+				<th scope="col">Delivery Rating</th>
+			</tr>
+		</thead>
+		<tbody>
+			<% for(var i=0; i<picksData.length; i++) { %>
+			<tr>
+				<td><%= picksData[i].rname%></td>
+				<td><%= picksData[i].iname%></td>
+				<td><%= picksData[i].price%></td>
+				<td><%= picksData[i].qtyordered%></td>
+				<td><%= picksData[i].sumprice%></td>
+			</tr>
+			<% } %>
+		</tbody>
+	</table>
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Restaurant</th>
+				<th scope="col">Item</th>
+				<th scope="col">Price</th>
+				<th scope="col">Quantity selected</th>
+				<th scope="col">Total item price</th>
+			</tr>
+		</thead>
+		<tbody>
+			<% for(var i=0; i<picksData.length; i++) { %>
+			<tr>
+				<td><%= picksData[i].rname%></td>
+				<td><%= picksData[i].iname%></td>
+				<td><%= picksData[i].price%></td>
+				<td><%= picksData[i].qtyordered%></td>
+				<td><%= picksData[i].sumprice%></td>
+			</tr>
+			<% } %>
+		</tbody>
+	</table>
+
+	<br />
+	<br />
+	<% var j=0; for (var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
+	<h4>Subtotal: $<%= j %></h4>
+	<br>
+
+	<form class="form-inline" action="/customer/checkPromo" method="get" role="form">
+		<label for="inputPromoCode">Promo Code</label>
+		<input type="text" class="form-control" id="inputPromoCode" name="inputPromoCode" placeholder="PANDAFOODPROMO">
+		<button type="submit" class="btn btn-primary mb-2">Check Promo Code</button>
+	</form>
+	<form id="html_form" action="/customer/placeOrder" role="form" method="post">
+
+		<label for="exampleFormControlSelect1">Delivery Address</label>
+		<select class="form-control" id="exampleFormControlSelect1" name="oldAddress" placeholder="use an old address">
+			<% for(var i=0; i<addresses.length; i++) { %>
+			<option><%= addresses[i]%></option>
+			<% } %>
+		</select>
+		<input class="form-control" type="text" name="newAddress" placeholder="Add a new address here">
+
+		<br>
+
+		<label class="my-1 mr-2" for="inlineFormCustomSelectPref">Payment By</label>
+		<select class="custom-select my-1 mr-sm-2" name="paymentType" id="inlineFormCustomSelectPref">
+			<option value="1" selected>Cash</option>
+			<option value="2">Card: <%= cardNo%></option>
+		</select>
+		<br>
+
+		<br>
+		<button type="submit" class="btn btn-light btn-lg btn-block" name="add">
+			Place Order
+		</button>
+
+	</form>
+	<br>
+	<br>
+</body>

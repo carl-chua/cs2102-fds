@@ -132,13 +132,21 @@ function placeSQLOrder(address, cardNo, orderId) {
 	if (cardNo != null) {
 		addCardSentence = "paymentCardNoIfUsed = '" + cardNo + "', ";
 	}
+	let dateTime = new Date(Date.now())
+	dateTime.setHours(dateTime.getHours() + 4)
 	query = 
 	"UPDATE Orders SET \
 		" + addCardSentence +" \
-		timePlaced = '" + new Date(Date.now()).toISOString().replace('T',' ').replace('Z','') + "', \
+		timePlaced = '" + dateTime.toISOString().replace('T',' ').replace('Z','') + "', \
 		address = '" + address + "' \
 	where orderId = " + orderId + ";"
 	return query
+}
+
+function getOrderHistory(customerId) {
+	query = 
+	""
+	return query;
 }
 
 /* GET users listing. */
@@ -315,6 +323,8 @@ router.post('/chooseFood', function (req, res, next) {
 
 router.get('/history', function (req, res, next) {
 	res.send("history not implemented!");
+	// res.render('customerOrderHistory',  {
+	// })
 })
 
 router.post('/confirmOrder', function (req, res, next) {
@@ -386,6 +396,7 @@ router.post('/placeOrder', function (req, res, next) {
 				if (err == null) {
 					currentOrderId == null;
 				}
+				console.log("currentOrderId: ", currentOrderId);
 				res.redirect('/customer/history');
 			})
 		})

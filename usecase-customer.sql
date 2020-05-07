@@ -19,10 +19,9 @@ select name, category, price, rating
 from FoodMenuItems
 where restaurantId = 0
 and isSelling = true
-and category = 'Local'  
+and category = 'Local'
 -- and isAvailable = true  -- need to check and display
 
--- search food by name (within restaurant)
 
 -- click on food: show reviews
 select starRating, reviewText
@@ -30,12 +29,12 @@ from FoodReviews
 where itemId = 0
 
 -- add to cart
--- apply promo code
 -- add address
 
+-- search food by name (within restaurant)
+-- apply promo code
 -- rate delivery for order
 -- review food for orders
-
 -- browse part orders
 -- browse past reviews
 
