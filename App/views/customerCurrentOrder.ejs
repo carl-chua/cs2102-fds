@@ -50,22 +50,22 @@
                 <th scope="col">Price</th>
                 <th scope="col">Quantity selected</th>
                 <th scope="col">Total item price</th>
+                <th scope="col">Quantity To Remove</th>
                 <th scope="col">Remove</th>
-                <th scope="col">Quantity</th>
             </tr>
         </thead>
         <tbody>
             <% for(var i=0; i<picksData.length; i++) { %>
             <tr>
-                <form id="html_form" action="/customerHomePage" role="form" method="post">
+                <form id="html_form" action="/customer/removeItem" role="form" method="post">
                     <td><%= picksData[i].rname%></td>
                     <td><%= picksData[i].iname%></td>
                     <td><%= picksData[i].price%></td>
                     <td><%= picksData[i].qtyordered%></td>
                     <td><%= picksData[i].sumprice%></td>
-                    <td><button type="submit" class="btn btn-primary" name="remove"
-                            value='<%= picksData[i].itemid%>'>Remove</button></td>
                     <td><input type="number" name="removeQty" min="1" step="1"></td>
+                    <td><button type="submit" class="btn btn-primary" name="itemIdtoRemove"
+                        value='<%= picksData[i].itemid%>'>Remove</button></td>
                 </form>
             </tr>
             <% } %>
@@ -110,7 +110,7 @@
                     <td><%= foodData[i].price%></td>
                     <td><%= foodData[i].category%></td>
                     <td><%= foodData[i].rating%></td>
-                    <td><input type="number" class="col-sm-3" name="itemQty" min="1" step="1"></td>
+                    <td><input type="number" name="itemQty" min="1" step="1"></td>
                     <td><button type="submit" class="btn btn-primary" name="add"
                             value='<%= foodData[i].itemid%>'>Select</button></td>
                 </form>

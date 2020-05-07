@@ -246,6 +246,36 @@ router.post('/addItem', function (req, res, next) {
 	console.log("END");
 });
 
+router.post('/removeItem', function (req, res, next) {
+	
+	var itemIdToRemove = req.body.itemIdtoRemove;
+	var removeQty = req.body.removeQty;
+	
+	var get_number_of_items = "SELECT * \
+		FROM Picks \
+		WHERE orderId = " + currentOrderId + " \
+		AND itemId = " + itemIdToRemove + ";";
+	pool.query(get_number_of_items, (err, numberData) => {
+		console.log(err);
+		var update_query;
+		if (numberData.rows[0].qtyordered <= removeQty) {
+			update_query = "DELETE FROM Picks \
+			WHERE orderId = " + currentOrderId + " \
+			AND itemId = " + itemIdToRemove + ";";
+		}
+		else {
+			update_query = "UPDATE Picks SET \
+			qtyOrdered = qtyOrdered - " + removeQty + " \
+			WHERE orderId = " + currentOrderId + " \
+			AND itemId = " + itemIdToRemove + ";";
+		}
+		pool.query(update_query, (err, updateData) => {
+			console.log("Order Updated: ", updateData);
+			res.redirect('/customer/orders');
+		})
+	})
+});
+
 router.post('/chooseFood', function (req, res, next) {
 	var restaurantIdPicked = req.body.restaurantIdPicked;
 	// displayCurrentOrderForRestaurant(restaurantIdPicked);

@@ -50,15 +50,11 @@ router.post('/', function(req, res, next) {
 			AND isDeleted = false;";
 	}
 	else if (staffVal == 3) {
-<<<<<<< Updated upstream
-		user_query = "SELECT restaurantStaffId, name \
+		user_query = "SELECT restaurantStaffId, name, restaurantId\
 			FROM RestaurantStaffs \
 			WHERE email = '" + email + "'\
 			AND password = '" + password + "' \
 			AND isDeleted = false;";
-=======
-		user_query = "SELECT restaurantStaffId, name, restaurantId FROM RestaurantStaffs WHERE email = '" + email + "' AND password = '" + password + "';";
->>>>>>> Stashed changes
 	}
 	else if (managerVal == 4) {
 		user_query = "SELECT FDSManagerId \
