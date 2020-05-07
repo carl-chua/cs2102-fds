@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Page Title -->
+	<title>Customer Home Page</title>
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+
+	<!-- CSS for Styling -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+		integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+	<!-- JavaScript for Interactivity -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+		integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+		integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+		crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+		integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+		crossorigin="anonymous"></script>
+</head>
+
+<body>
+	<h1>PandaFood</h1>
+	<br />
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+			aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+			<div class="navbar-nav">
+				<a class="nav-item nav-link" href="/customer/orders">Order <span class="sr-only">(current)</span></a>
+				<a class="nav-item nav-link" href="/customer/history">Past Orders and Reviews</a>
+				<a class="nav-item nav-link active" href="/customer/accounts">Accounts</a>
+			</div>
+		</div>
+	</nav>
+	<br />
+	<table class="table">
+		<tbody>
+			<tr>
+				<td>Username</td>
+				<td>Email</td>
+				<td>Password</td>
+				<td>Phone Number</td>
+				<td>Registered Card</td>
+				<td>Reward Points</td>
+			</tr>
+			<tr>
+				<td><%= userName%></td>
+				<td><%= email%></td>
+				<td><%= password%></td>
+				<td><%= phoneNo%></td>
+				<td><%= registeredCard%></td>
+				<td><%= rewardPoints%></td>
+			</tr>
+		</tbody>
+	</table>
+	<br>
+
+	<form action="/customer/editAccountDetails" method="POST">
+		<button type="submit" class="btn btn-primary col-4">Edit Account Details</button>
+	</form>
+	<br>
+	<form action="/customer/deactivateAccount" method="POST">
+		<button type="submit" class="btn btn-danger col-4">Deactivate Account</button>
+	</form>
+	<br />
+</body>
