@@ -53,6 +53,12 @@ function getEarningsTodayQuery(restaurantId) {
   //" AND DATE(o.timeplaced) = CURRENT_DATE"
   " GROUP BY o.restaurantid";
 }
+function getChangeOrderStatusToPreparingQuery(orderId) {
+  return "UPDATE ORDERS SET status = 'PREPARING' WHERE orderid = " + orderId;
+}
+function getChangeOrderStatusToCompletedQuery(orderId) {
+  return "UPDATE ORDERS SET status = 'READY-FOR-DELIVERY' WHERE orderid = " + orderId;
+}
 function getMenuQuery(restaurantId) {
   return "SELECT f.itemid, f.category, f.name, f.price, f.qtyorderedtoday, f.dailylimit, f.isselling, f.isavailabletoday, f.rating \
   FROM FOODMENUITEMS f \
@@ -115,6 +121,11 @@ function getBottomItemQuery(restaurantId) {
   ORDER BY total DESC \
   LIMIT 5";
 }
+
+function getNoOfOrderMonthlyQuery(restaurantId) {
+  return "SELECT EXTRACT(YEAR FROM o.timeplaced) AS year, EXTRACT(MONTH FROM o.timeplaced) AS month, COUNT(*) AS nooforders, SUM(o.foodsubtotal) AS totalcost FROM ORDERS o WHERE o.restaurantid = " + restaurantId + " GROUP BY EXTRACT(YEAR FROM o.timeplaced), EXTRACT(MONTH FROM o.timeplaced) ORDER BY EXTRACT(YEAR FROM o.timeplaced) DESC, EXTRACT(MONTH FROM o.timeplaced) DESC";
+}
+
 function getTotalNumberOfOrdersQuery(restaurantId) {
   return "SELECT SUM(o.orderid) as total \
   FROM ORDERS o \
@@ -127,30 +138,87 @@ function getTotalSalesQuery(restaurantId) {
     FROM ORDERS o \
     WHERE o.restaurantid = " +
     restaurantId +
-    "AND (o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED')";
+    " AND (o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED')";
+}
+function getActiveCampaignsQuery(restaurantId) {
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = true UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = true";
+}
+function getInactiveCampaignsQuery(restaurantId) {
+  return "SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN RESTAURANTPROMOTIONALCAMPAIGNS rpc  ON pc.promocode = rpc.promocode WHERE rpc.restaurantid = " + restaurantId + " AND pc.isactive = false UNION SELECT pc.promocode, pc.startdatetime, pc.enddatetime, pc.discounttype, pc.discount, pc.minspend, pc.promoapplicablefor, pc.dayssincelastorder, pc.enddatetime - pc.startdatetime as hours FROM PROMOTIONALCAMPAIGNS pc JOIN FOODITEMPROMOTIONALCAMPAIGNS fipc ON pc.promocode = fipc.promocode WHERE fipc.restaurantid = " + restaurantId + " AND pc.isactive = false";
+}
+function getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder) {
+  return "INSERT INTO PROMOTIONALCAMPAIGNS VALUES('" +
+  promoCode +
+  "', " +
+  startDateTime +
+  "', " +
+  endDateTime +
+  ", '" +
+  promoType +
+  "', '" +
+  discountType +
+  "', " +
+  discount +
+  ", " +
+  minSpend +
+  ", '" +
+  promoApplicableFor +
+  "', " +
+  daysSinceLastOrder +
+  ", true)";
+}
+function getAddPromotionalCampaignQuery(restaurantId, promoCode) {
+  return "INSERT INTO RESTAURANTPROMOTIONALCAMPAIGNS VALUES('" +
+  promoCode +
+  "', " +
+  restaurantId + 
+  ")";
+}
+function getAddFoodItemCampaignQuery(restaurantId, promoCode, itemId) {
+  return "INSERT INTO FOODITEMPROMOTIONALCAMPAIGNS VALUES('" +
+  promoCode +
+  "', " +
+  restaurantId + 
+  ", " +
+  itemId +
+  ")";
+}
+function getEditCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder) {
+  return "UPDATE PROMOTIONALCAMPAIGNS \
+  SET startDateTime = " +
+  startDateTime +
+  ", endDateTime = " +
+  endDateTime +
+  ", promoType = '" +
+  promoType +
+  "', discountType = '" +
+  discountType +
+  "', discount = " +
+  discount +
+  ", minSpend = " +
+  minSpend +
+  ", promoApplicableFor = '" +
+  promoApplicableFor +
+  "', daysSinceLastOrder = " +
+  daysSinceLastOrder +
+  " WHERE promoCode = " +
+  promoCode;
 }
 
+function getDeleteCampaignQuery(promoCode) {
+  return "UPDATE PROMOTIONALCAMPAIGNS \
+  SET isActive = false \
+  WHERE promoCode = " +
+  promoCode;
+}
 
-/* SQL Queries */
-//SQl only uses single quotes
-// var pendingOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'PENDING' ORDER BY o.timeplaced";
-// var preparingOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'PREPARING' ORDER BY o.timeplaced";
-// var completedOrdersQuery =
-//   "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid WHERE o.restaurantid = " +
-//   restaurantId +
-//   " AND o.status = 'READY-FOR-DELIVERY' OR o.status = 'DELIVERING' OR o.status = 'DELIVERED' ORDER BY o.timeplaced";
-// var earningsTodayQuery =
-//   "SELECT SUM(o.foodsubtotal) as earnings FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid GROUP BY o.orderid";
-// var menuQuery =
-//   "SELECT f.itemid, f.category, f.name, f.price, f.qtyorderedtoday, f.dailylimit, f.isselling, f.isavailabletoday, f.rating FROM FOODMENUITEMS f WHERE f.restaurantid = " +
-//   restaurantId +
-//   " ORDER BY f.category";
+function getEditMinSpendQuery(restaurantId, minSpend) {
+  return "UPDATE RESTAURANTS \
+  SET minSpend = " +
+  minSpend +
+  " WHERE restaurantId = " +
+  restaurantId;
+}
 
 router.get("/", function (req, res, next) {
   //values are passed in from index.js
@@ -183,6 +251,20 @@ router.use("/orders", function (req, res, next) {
   });
 });
 
+router.use("/toPreparing", function (req, res, next) {
+  pool.query(getChangeOrderStatusToPreparingQuery(orderId), (err, data) => {
+    console.log(err);
+    res.redirect("/restaurantStaffHomePage/orders");
+  });
+});
+
+router.use("/toCompleted", function (req, res, next) {
+  pool.query(getChangeOrderStatusToCompletedQuery(orderId), (err, data) => {
+    console.log(err);
+    res.redirect("/restaurantStaffHomePage/orders");
+  });
+});
+
 //This will render menuPage.ejs and return other arguments (data)
 router.use("/menu", function (req, res, next) {
   pool.query(getMenuQuery(restaurantId), (err, menuData) => {
@@ -208,7 +290,7 @@ router.post("/addItem", function (req, res, next) {
 
   pool.query(getAddItemQuery(restaurantId, itemId, name, dailyLimit, price, category, isAvailableToday), (err, data) => {
     console.log(err);
-    res.redirect("/menu");
+    res.redirect("/restaurantStaffHomePage/menu");
   });
 });
 
@@ -226,7 +308,7 @@ router.post("/editItem", function (req, res, next) {
 
   pool.query(getEditItemQuery(itemId, name, dailyLimit, price, category, isAvailableToday), (err, data) => {
     console.log(err);
-    res.redirect("/menu");
+    res.redirect("/restaurantStaffHomePage/menu");
   });
 });
 
@@ -238,7 +320,7 @@ router.post("/deleteItem", function (req, res, next) {
   var itemId = req.body.itemId;
   pool.query(getDeleteItemQuery(itemId), (err, data) => {
     console.log(err);
-    res.redirect("/menu");
+    res.redirect("/restaurantStaffHomePage/menu");
   });
 });
 
@@ -247,19 +329,137 @@ router.use("/statistics", function (req, res, next) {
     pool.query(getBottomItemQuery(restaurantId), (err, bottomData) => {
       pool.query(getTotalNumberOfOrdersQuery(restaurantId), (err, totalData) => {
         pool.query(getTotalSalesQuery(restaurantId), (err, salesData) => {
-          console.log(err);
-          res.render("statisticsPage", {
-            title: "Statistics Page",
-            top: topData.rows,
-            bottom: bottomData.rows,
-            total: totalData.rows,
-            sales: salesData.rows,
+          pool.query(getNoOfOrderMonthlyQuery(restaurantId), (err, monthData) => {
+            console.log(err);
+            res.render("statisticsPage", {
+              title: "Statistics Page",
+              top: topData.rows,
+              bottom: bottomData.rows,
+              total: totalData.rows,
+              sales: salesData.rows,
+              month: monthData.rows,
+            });
           });
         });
       });
     });
   });
 });
+
+router.use("/campaigns", function (req, res, next) {
+  pool.query(getActiveCampaignsQuery(restaurantId), (err1, activeData) => {
+    pool.query(getInactiveCampaignsQuery(restaurantId), (err2, inactiveData) => {
+      console.log("restaurantID: ", restaurantId);
+      console.log("SQL query: ", activeData);
+      console.log(err1);
+      console.log(err2);
+      res.render("campaignsPage", {
+        title: "Campaigns Page",
+        active: activeData.rows,
+        inactive: inactiveData.rows,
+      });
+    });
+  });
+});
+
+router.get("/addCampaign", function (req, res, next) {
+  res.render("addCampaignPage", { title: "Add Campaign Page" });
+});
+
+router.post("/addCampaign", function (req, res, next) {
+  var promoCode = req.body.promoCode
+  var startDateTime = req.body.startDateTime;
+  var endDateTime = req.body.endDateTime;
+  var promoType = req.body.promoType;
+  var discountType = req.body.discountType;
+  var discount = req.body.discount;
+  var minSpend = req.body.minSpend;
+  var promoApplicableFor = req.body.promoApplicableFor;
+  var daysSinceLastOrder = req.body.daysSinceLastOrder;
+  var itemId = req.body.itemId;
+
+  if (promoType == "RPC") {
+    pool.query(getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder), (err, data) => {
+      pool.query(getAddPromotionalCampaignQuery(restaurantId, promoCode), (err, data) => {
+      console.log(err);
+      res.redirect("/restaurantStaffHomePage/campaigns");
+      });
+    });
+  } else if (promoType == "FIPC") {
+    pool.query(getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder), (err, data) => {
+      pool.query(getAddFoodItemCampaignQuery(restaurantId, promoCode, itemId), (err, data) => {
+      console.log(err);
+      res.redirect("/restaurantStaffHomePage/campaigns");
+      });
+    });
+  }
+});
+
+router.get("/editCampaign", function (req, res, next) {
+  res.render("editCampaignPage", { title: "Edit Campaign Page" });
+});
+
+router.post("/editCampaign", function (req, res, next) {
+  var promoCode = req.body.promoCode
+  var startDateTime = req.body.startDateTime;
+  var endDateTime = req.body.endDateTime;
+  var promoType = req.body.promoType;
+  var discountType = req.body.discountType;
+  var discount = req.body.discount;
+  var minSpend = req.body.minSpend;
+  var promoApplicableFor = req.body.promoApplicableFor;
+  var daysSinceLastOrder = req.body.daysSinceLastOrder;
+
+  pool.query(getEditCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder), (err, data) => {
+    console.log(err);
+    res.redirect("/restaurantStaffHomePage/campaigns");
+  });
+});
+
+router.get("/deleteCampaign", function (req, res, next) {
+  res.render("deleteCampaignPage", { title: "Delete Campaign Page" });
+});
+
+router.post("/deleteCampaign", function (req, res, next) {
+  var itemId = req.body.itemId;
+  pool.query(getDeleteCampaignQuery(promoCode), (err, data) => {
+    console.log(err);
+    res.redirect("/restaurantStaffHomePage/campaigns");
+  });
+});
+
+
+router.get("/admin", function (req, res, next) {
+  res.render("adminPage", { title: "Admin Page" });
+});
+
+router.post("/admin", function (req, res, next) {
+  var minSpend = req.body.minSpend;
+  pool.query(getEditMinSpendQuery(restaurantId, minSpend), (err, data) => {
+    console.log(err);
+    res.redirect("/");
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

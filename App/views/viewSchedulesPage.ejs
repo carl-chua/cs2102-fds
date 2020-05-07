@@ -15,8 +15,12 @@
   </head>
   <body>
     <h1>Your current schedule</h1>
+    <% if (scheduleData == "null") { %>
+    <p> You do not have a schedule for the current time period! You will not be allocated jobs until you create a new work schedule for the current time period. </p>
+    <% } %>
+    <% if (scheduleData != "null") { %>
     <h5><%= scheduleData[0].scheduletype %></h5>
-    <h5><%= scheduleData[0].startdate %> - <%= scheduleData[0].enddate %></h5>
+    <h5><%= scheduleData[0].startdate.toString().slice(0, 15) %> - <%= scheduleData[0].enddate.toString().slice(0, 15) %></h5>
     <br />
     <table class="table">
       <thead>
@@ -116,6 +120,7 @@
         </tr>
       </tbody>
     </table>
+    <% } %>
     <br />
     <form id="html_form" action="/viewSchedulesPage" role="form" method="post">
     <button type="submit" class="btn btn-primary" name="create" value='1'>Create new schedule</button>

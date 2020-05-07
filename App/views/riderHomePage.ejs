@@ -29,8 +29,11 @@
 					<th scope="col">Delivery address</th>
 					<th scope="col">Customer name</th>
 					<th scope="col">Customer phone number</th>
+					<th scope="col">Payment mode</th>
 					<th scope="col">Delivery fee</th>
 					<th scope="col">Time order placed</th>
+					<th scope="col">Time arrived at restaurant</th>
+					<th scope="col">Time order collected</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -42,8 +45,37 @@
 					<td><%= orderData[i].caddress%></td>
 					<td><%= orderData[i].cname%></td>
 					<td><%= orderData[i].phoneno%></td>
+					<% if (orderData[i].paymentcardnoifused == null) { %>
+					<td>Cash</td>
+					<% } %>
+					<% if (orderData[i].paymentcardnoifused != null) { %>
+						<% if (orderData[i].haspaid == false) { %>
+						<td>Card - not paid</td>
+						<% } %>
+						<% if (orderData[i].haspaid == true) { %>
+						<td>Card - paid</td>
+						<% } %>
+					<% } %>
 					<td><%= orderData[i].deliveryfee%></td>
-					<td><%= orderData[i].timeplaced%></td>
+					<% if (orderData[i].timeplaced == null) { %>
+					<td><%= orderData[i].timeplaced %></td>
+					<% } %>
+					<% if (orderData[i].timeplaced != null) { %>
+					<td><%= orderData[i].timeplaced.toString().slice(0, 24); %></td>
+					<% } %>
+					<% if (orderData[i].timeriderarrivesrestaurant == null) { %>
+					<td><%= orderData[i].timeriderarrivesrestaurant%></td>
+					<% } %>
+					<% if (orderData[i].timeriderarrivesrestaurant != null) { %>
+					<td><%= orderData[i].timeriderarrivesrestaurant.toString().slice(0,24);%></td>
+					<% } %>
+					<% if (orderData[i].timeriderleavesrestaurant == null) { %>
+					<td><%= orderData[i].timeriderleavesrestaurant%></td> 
+					<% } %>
+					<% if (orderData[i].timeriderleavesrestaurant != null) { %>
+					<td><%= orderData[i].timeriderleavesrestaurant.toString().slice(0,24);%></td> 
+					<% } %>
+
 				</tr>
 				<% } %>
 			</tbody>
@@ -51,11 +83,19 @@
 		<% } %>
 		<form id="html_form" action="/riderHomePage" role="form" method="post">
 		<% if (orderData.length > 0) { %>
+		<% if (orderData[0].timeriderarrivesrestaurant == null) { %>
 		<button type="submit" class="btn btn-primary" name="arrived" value='<%= orderData[0].orderid %>'>Arrived at restaurant</button>
+		<% } %>
+		<% if (orderData[0].timeriderleavesrestaurant == null) { %>
 		<button type="submit" class="btn btn-primary" name="collected" value='<%= orderData[0].orderid %>'>Collected order</button>
+		<% } %>
+		<% if (orderData[0].timeriderdelivered == null) { %>
 		<button type="submit" class="btn btn-primary" name="delivered" value='<%= orderData[0].orderid %>'>Delivered order</button>
 		<% } %>
-		<br /><br />
+		<% } %>
+		<br /><br /><br /><br /><br />
+		<h2>Your information</h2>
+		<br />
 		<button type="submit" class="btn btn-primary" name="schedules" value='4'>View your schedules and payments</button>
 		<br /><br />
 		<button type="submit" class="btn btn-primary" name="deliveries" value='6'>View your deliveries</button>

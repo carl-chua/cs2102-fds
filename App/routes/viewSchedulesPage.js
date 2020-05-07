@@ -39,10 +39,13 @@ router.get('/', function(req, res, next) {
 	var scheduleQuery = "SELECT * FROM Schedules S WHERE S.riderId = " + req.session.riderId + " AND NOW()::timestamp BETWEEN S.startDate AND S.endDate;";
 	pool.query(scheduleQuery, (err, scheduleData) => {
 		console.log(err);
-		console.log(scheduleData.rows);
-		if (scheduleData.rows[0].scheduletype == "MONTHLY") {
+		if (scheduleData.rows.length == 0) {
+			res.render('viewSchedulesPage', {scheduleData: "null", shiftData: "null"});
+		}
+		else if (scheduleData.rows[0].scheduletype == "MONTHLY") {
 			mwsQuery = "SELECT * FROM MonthlyWorkSchedules MWS WHERE MWS.scheduleId = " + scheduleData.rows[0].scheduleid + ";";
 			pool.query(mwsQuery, (err, mwsData) => {
+				console.log(mwsData);
 				var shiftArray = [];
 				shiftArray.push(returnMWSshift(mwsData.rows[0].monshift));
 				shiftArray.push(returnMWSshift(mwsData.rows[0].tueshift));
@@ -51,7 +54,6 @@ router.get('/', function(req, res, next) {
 				shiftArray.push(returnMWSshift(mwsData.rows[0].frishift));
 				shiftArray.push(returnMWSshift(mwsData.rows[0].satshift));
 				shiftArray.push(returnMWSshift(mwsData.rows[0].sunshift));
-				console.log(shiftArray);
 				res.render('viewSchedulesPage', {scheduleData: scheduleData.rows, shiftData: shiftArray});
 			});
 		}

@@ -15,6 +15,7 @@
   </head>
   <body>
     <h1>Your schedule history</h1>
+    	<form id="html_form" action="/viewPastSchedulesPage" role="form" method="post">
 		<table class="table">
 			<thead>
 				<tr>
@@ -31,17 +32,29 @@
 			<tbody>
 				<% for(var i=0; i<scheduleData.length; i++) { %>
 				<tr>
+					<% if (scheduleData[i].startdate == null) { %>
 					<td><%= scheduleData[i].startdate%></td>
+					<% } %>
+					<% if (scheduleData[i].startdate != null) { %>
+					<td><%= scheduleData[i].startdate.toString().slice(0, 15)%></td>
+					<% } %>
+					<% if (scheduleData[i].enddate == null) { %>
 					<td><%= scheduleData[i].enddate%></td>
+					<% } %>
+					<% if (scheduleData[i].enddate != null) { %>
+					<td><%= scheduleData[i].enddate.toString().slice(0, 15)%></td>
+					<% } %>
 					<td><%= scheduleData[i].scheduletype%></td>
 					<td><%= scheduleData[i].feeperdelivery%></td>
 					<td><%= scheduleData[i].noofdeliveries%></td>
 					<td><%= (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries)%></td>
 					<td><%= scheduleData[i].basesalary%></td>
 					<td><%= (scheduleData[i].basesalary + (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries))%></td>
+					<td><button type="submit" class="btn btn-primary" name="orders" value='<%= scheduleData[i].scheduleid %>'>View deliveries from this schedule</button></td>
 				</tr>
 				<% } %>
 			</tbody>
 		</table>
+		</form>
   </body>
 </html>

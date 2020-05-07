@@ -22,11 +22,12 @@
 			action: the JS file to send data to
 			method: post
 		-->
-		<form id="html_form" action="deleteItem" role="form" method="post">
+		<form id="html_form" action="/restaurantStaffHomePage/deleteItem" role="form" method="post">
 			<div class="form-group">
 				<label for="itemId">Enter Item ID:</label>
                 <input type="text" class="form-control" id="itemId" name="itemId" aria-describedby="itemIdHelp" placeholder="Enter the Item ID">
-                <br>
+				<br>
+			</div>
 			<button type="submit" class="btn btn-primary">Submit</button>
         </form>
 		

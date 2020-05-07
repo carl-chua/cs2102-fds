@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+		<!-- Page Title -->
+    <title>Edit Campaign Page</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+		
+		<!-- CSS for Styling -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+		
+		<!-- JavaScript for Interactivity -->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+		<!-- ADDED JavaScript -->
+		<!-- <script src="javascripts/insertScript.js"></script> -->
+  </head>
+  <body>
+	<h1>Edit Campaign</h1>
+		<!--
+			action: the JS file to send data to
+			method: post
+		-->
+		<form id="html_form" action="/restaurantStaffHomePage/editCampaign" role="form" method="POST">
+            <div class="form-group">
+				<label for="promoCode">Enter Promo Code:</label>
+				<input type="text" class="form-control" id="promoCode" name="promoCode" aria-describedby="promoCodeHelp" placeholder="Enter the Promo Code">
+            </div>
+            <div class="form-group">
+				<label for="startDateTime">Enter Start Date Time:</label>
+				<input type="text" class="form-control" id="startDateTime" name="startDateTime" aria-describedby="startDateTimeHelp" placeholder="YYYY-MM-DD">
+            </div>
+            <div class="form-group">
+				<label for="endDateTime">Enter End Date Time:</label>
+				<input type="text" class="form-control" id="endDateTime" name="endDateTime" aria-describedby="endDateTimeHelp" placeholder="YYYY-MM-DD">
+            </div>
+            <div class="form-group">
+				<label for="promoType">Enter Promo Type:</label>
+				<input type="text" class="form-control" id="promoType" name="promoType" aria-describedby="promoTypeHelp" placeholder="RPC/FIPC">
+            </div>
+			<div class="form-group">
+				<label for="discountType">Enter Discount Type:</label>
+				<input type="text" class="form-control" id="discountType" name="discountType" aria-describedby="discountTypeHelp" placeholder="PERCENT/DOLLAR">
+            </div>
+            <div class="form-group">
+				<label for="discount">Enter Discount Value:</label>
+				<input type="text" class="form-control" id="discount" name="discount" aria-describedby="discountHelp" placeholder="Enter the Discount Value">
+            </div>
+            <div class="form-group">
+				<label for="minSpend">Enter Min Spending:</label>
+				<input type="text" class="form-control" id="minSpend" name="minSpend" aria-describedby="minSpendHelp" placeholder="Enter the Min Spending">
+            </div>
+            <div class="form-group">
+				<label for="promoApplicableFor">Enter Promo Applicable For:</label>
+				<input type="text" class="form-control" id="promoApplicableFor" name="promoApplicableFor" aria-describedby="promoApplicableForHelp" placeholder="ALL-CUSTOMERS/ONLY-FOR-FIRST-ACCOUNT-ORDER/MAX-DAYS-SINCE-LAST-ORDER/MIN-DAYS-SINCE-LAST-ORDER">
+            </div>
+            <div class="form-group">
+				<label for="daysSinceLastOrder">Enter Days Since Last Order:</label>
+				<input type="text" class="form-control" id="daysSinceLastOrder" name="daysSinceLastOrder" aria-describedby="daysSinceLastOrderHelp" placeholder="Leave blank if not applicable">
+            </div>
+			<button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+		
+		<!-- <script>
+			(function() {
+				window.addEventListener('load', function() {
+					var forms = [document.getElementById('html_form')];
+					var validation = Array.prototype.filter.call(forms, function(form) {
+						// the check function comes from insertScript.js
+						form.addEventListener('submit', check, false);
+					});
+				}, false);
+			})();
+        </script> -->
+        
+  </body>
+</html>

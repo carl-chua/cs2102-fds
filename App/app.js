@@ -8,7 +8,6 @@ var session = require('express-session');
 require("dotenv").config();
 var indexRouter = require("./routes/index");
 var customerRouter = require("./routes/customer");
-var customerOrderConfirmPageRouter = require("./routes/customerOrderConfirmPage");
 var riderHomePageRouter = require("./routes/riderHomePage");
 var restaurantStaffHomePageRouter = require("./routes/restaurantStaffHomePage");
 var managerHomePageRouter = require("./routes/managerHomePage");
@@ -52,7 +51,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/customer", customerRouter);
-app.use("/customerOrderConfirmPage", customerOrderConfirmPageRouter);
 app.use("/riderHomePage", riderHomePageRouter);
 app.use("/restaurantStaffHomePage", restaurantStaffHomePageRouter);
 app.use("/managerHomePage", managerHomePageRouter);

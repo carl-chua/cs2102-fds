@@ -74,6 +74,26 @@
             <% } %>
         </tbody>
     </table>
+    <h2>Monthly Analysis</h2>
+    <table class="table">
+        <tr style="background-color: #FFFACD">
+            <th scope="col">Year</th>
+            <th scope="col">Month</th>
+            <th scope="col">Total No. of Orders</th>
+            <th scope="col">Total Cost</th>
+        </tr>
+        </thead>
+        <tbody>
+            <% for(var i=0; i<month.length; i++) { %>
+            <tr>
+                <td><%= month[i].year%></td>
+                <td><%= month[i].month%></td>
+                <td><%= month[i].nooforders%></td>
+                <td><%= month[i].totalcost%></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
     <h3>Total orders: <%=total[0].total%></h3>
     <h3>Total sales: $<%=sales[0].sales%></h3>
 </body>

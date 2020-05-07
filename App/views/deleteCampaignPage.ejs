@@ -2,7 +2,7 @@
 <html>
   <head>
 		<!-- Page Title -->
-    <title>Edit Item Page</title>
+    <title>Delete Campaign Page</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		
 		<!-- CSS for Styling -->
@@ -17,35 +17,15 @@
 		<!-- <script src="javascripts/insertScript.js"></script> -->
   </head>
   <body>
-	<h1>Edit Item</h1>
+	<h1>Delete Campaign</h1>
 		<!--
 			action: the JS file to send data to
 			method: post
 		-->
-		<form id="html_form" action="/restaurantStaffHomePage/editItem" role="form" method="POST">
+		<form id="html_form" action="/restaurantStaffHomePage/deleteCampaign" role="form" method="post">
 			<div class="form-group">
-				<label for="itemId">Enter Item ID:</label>
-				<input type="text" class="form-control" id="itemId" name="itemId" aria-describedby="itemIdHelp" placeholder="Enter the Item ID">
-            </div>
-            <div class="form-group">
-				<label for="name">Enter Name:</label>
-				<input type="text" class="form-control" id="name" name="name" aria-describedby="nameHelp" placeholder="Enter the name">
-            </div>
-            <div class="form-group">
-				<label for="dailyLimit">Enter Daily Limit:</label>
-				<input type="text" class="form-control" id="dailyLimit" name="dailyLimit" aria-describedby="dailyLimitHelp" placeholder="Enter the Daily Limit">
-            </div>
-            <div class="form-group">
-				<label for="price">Enter Price:</label>
-				<input type="text" class="form-control" id="price" name="price" aria-describedby="priceHelp" placeholder="Enter the price">
-            </div>
-            <div class="form-group">
-				<label for="category">Enter Category:</label>
-				<input type="text" class="form-control" id="category" name="category" aria-describedby="categoryHelp" placeholder="Local/Western/Japanese/Indian/Chinese/Exotic/Others">
-            </div>
-            <div class="form-group">
-				<label for="isAvailableToday">Enter Availability:</label>
-				<input type="text" class="form-control" id="isAvailableToday" name="isAvailableToday" aria-describedby="isAvailableTodayHelp" placeholder="true/false">
+				<label for="promoCode">Enter Promo Code:</label>
+				<input type="text" class="form-control" id="promoCode" name="promoCode" aria-describedby="promoCodeHelp" placeholder="Enter the Promo Code">
             </div>
 			<button type="submit" class="btn btn-primary">Submit</button>
         </form>
