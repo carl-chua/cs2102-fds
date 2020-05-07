@@ -48,6 +48,15 @@
             <% } %>
         </tbody>
     </table>
+    <br>
+    <form id="html_form" action="/restaurantStaffHomePage/toPreparing" role="form" method="POST">
+        <div class="form-group">
+            <label for="orderId">Enter Order ID:</label>
+            <input type="text" class="form-control" id="orderId" name="orderId" aria-describedby="itemIdHelp" placeholder="Order ID">
+        </div>
+        <button type="submit" class="btn btn-primary">Preparing</button>
+    </form>
+    <br>
     <h1>Preparing Orders</h1>
     <table class="table">
         <tr style="background-color: #FFFACD">
@@ -72,6 +81,15 @@
             <% } %>
         </tbody>
     </table>
+    <br>
+    <form id="html_form" action="/restaurantStaffHomePage/toCompleted" role="form" method="POST">
+        <div class="form-group">
+            <label for="orderId">Enter Order ID:</label>
+            <input type="text" class="form-control" id="orderId" name="orderId" aria-describedby="itemIdHelp" placeholder="Order ID">
+        </div>
+        <button type="submit" class="btn btn-primary">Completed</button>
+    </form>
+    <br>
     <h1> Completed Orders</h1>
     <table class="table">
         <thead style="background-color: #90ee90">

@@ -22,7 +22,7 @@
 			action: the JS file to send data to
 			method: post
 		-->
-		<form id="html_form" action="addItem" role="form" method="POST">
+		<form id="html_form" action="/restaurantStaffHomePage/editItem" role="form" method="POST">
 			<div class="form-group">
 				<label for="itemId">Enter Item ID:</label>
 				<input type="text" class="form-control" id="itemId" name="itemId" aria-describedby="itemIdHelp" placeholder="Enter the Item ID">
@@ -41,11 +41,11 @@
             </div>
             <div class="form-group">
 				<label for="category">Enter Category:</label>
-				<input type="text" class="form-control" id="category" name="category" aria-describedby="categoryHelp" placeholder="Enter the category">
+				<input type="text" class="form-control" id="category" name="category" aria-describedby="categoryHelp" placeholder="Local/Western/Japanese/Indian/Chinese/Exotic/Others">
             </div>
             <div class="form-group">
 				<label for="isAvailableToday">Enter Availability:</label>
-				<input type="text" class="form-control" id="isAvailableToday" name="isAvailableToday" aria-describedby="isAvailableTodayHelp" placeholder="Enter a boolean true/false">
+				<input type="text" class="form-control" id="isAvailableToday" name="isAvailableToday" aria-describedby="isAvailableTodayHelp" placeholder="true/false">
             </div>
 			<button type="submit" class="btn btn-primary">Submit</button>
         </form>
