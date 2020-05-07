@@ -10,7 +10,7 @@ const pool = new Pool({
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-	var scheduleQuery = "SELECT * FROM Schedules WHERE riderId = " + req.session.riderId + ";";
+	var scheduleQuery = "SELECT * FROM Schedules WHERE riderId = " + req.session.riderId + "ORDER BY scheduleId desc;";
 	pool.query(scheduleQuery, (err, scheduleData) => {
 		console.log(err);
 		res.render('viewPastSchedulesPage', {scheduleData: scheduleData.rows});

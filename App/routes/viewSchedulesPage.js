@@ -67,14 +67,10 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
 	var createSchedule = req.body.create;
 	var viewPast = req.body.view;
-	var editCurrent = req.body.edit;
 
 	if (typeof createSchedule != 'undefined') {
 		res.redirect('/newSchedulesPage');
 		// use radio buttons in table format to select
-	}
-	else if (typeof editCurrent != 'undefined') {
-		//
 	}
 	else if (typeof viewPast != 'undefined') {
 		res.redirect('/viewPastSchedulesPage');

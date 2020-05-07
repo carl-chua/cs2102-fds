@@ -26,7 +26,6 @@ router.post('/', function(req, res, next) {
 	var collectedOrder = req.body.collected;
 	var deliveredOrder = req.body.delivered;
 	var viewSchedules = req.body.schedules;
-	var viewPayments = req.body.payments;
 	var viewDeliveries = req.body.deliveries;
 
 	console.log(viewSchedules);
@@ -50,9 +49,6 @@ router.post('/', function(req, res, next) {
 	}
 	else if (typeof viewSchedules != 'undefined') {
 		res.redirect('/viewSchedulesPage');
-	}
-	else if (typeof viewPayments != 'undefined') {
-		res.redirect('/viewPaymentsPage');	
 	}
 	else if (typeof viewDeliveries != 'undefined') {
 		res.redirect('/viewDeliveriesPage');
