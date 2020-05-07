@@ -40,7 +40,7 @@
 					<td><%= (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries)%></td>
 					<td><%= scheduleData[i].basesalary%></td>
 					<td><%= (scheduleData[i].basesalary + (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries))%></td>
-					<td><button type="submit" class="btn btn-primary" name="orders" value='<%= scheduleData[i].scheduleid %>'>View completed deliveries</button></td>
+					<td><button type="submit" class="btn btn-primary" name="orders" value='<%= scheduleData[i].scheduleid %>'>View deliveries from this schedule</button></td>
 				</tr>
 				<% } %>
 			</tbody>

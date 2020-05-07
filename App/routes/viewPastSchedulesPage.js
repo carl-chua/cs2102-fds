@@ -13,7 +13,12 @@ router.get('/', function(req, res, next) {
 	var scheduleQuery = "SELECT * FROM Schedules WHERE riderId = " + req.session.riderId + "ORDER BY scheduleId desc;";
 	pool.query(scheduleQuery, (err, scheduleData) => {
 		console.log(err);
-		res.render('viewPastSchedulesPage', {scheduleData: scheduleData.rows});
+		if (scheduleData.rows.length == 0) {
+			res.render('viewSchedulesPage', {scheduleData: []});
+		}
+		else {
+			res.render('viewPastSchedulesPage', {scheduleData: scheduleData.rows});
+		}
 	})
 });
 
@@ -23,7 +28,7 @@ router.post('/', function(req, res, next) {
 	var datesQuery = "SELECT startDate, endDate FROM Schedules WHERE scheduleId = " + scheduleId + ";";
 	pool.query(datesQuery, (err, datesData) => {
 		console.log(err);
-		time = new Date(Date.now()).toISOString().replace('T',' ').replace('Z','');
+
 		var startDate = (datesData.rows[0].startdate).toISOString().replace('T',' ').replace('Z','');
 		var endDate = (datesData.rows[0].enddate).toISOString().replace('T',' ').replace('Z','');
 		console.log(startDate, endDate);
