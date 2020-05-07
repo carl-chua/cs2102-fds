@@ -6,6 +6,8 @@ const { Pool } = require('pg')
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL
 });
+// say whether its monthly or weekly in ejs
+// start date, end date, details
 
 // MWS
 var shift1 = [true,true,true,true,false,true,true,true,true,false,false,false];
@@ -50,13 +52,13 @@ router.get('/', function(req, res, next) {
 				shiftArray.push(returnMWSshift(mwsData.rows[0].satshift));
 				shiftArray.push(returnMWSshift(mwsData.rows[0].sunshift));
 				console.log(shiftArray);
-				res.render('viewSchedulesPage', {shiftData: shiftArray});
+				res.render('viewSchedulesPage', {scheduleData: scheduleData.rows, shiftData: shiftArray});
 			});
 		}
 		else if (scheduleData.rows[0].scheduletype == "WEEKLY") {
 			wwsQuery = "SELECT * FROM WeeklyWorkSchedules WWS WHERE WWS.scheduleId = " + scheduleData.rows[0].scheduleid + ";";
 			pool.query(wwsQuery, (err, wwsData) => {
-				res.render('viewSchedulesPage', {shiftData: wwsData.rows[0].hourlyschedule});
+				res.render('viewSchedulesPage', {scheduleData: scheduleData.rows, shiftData: wwsData.rows[0].hourlyschedule});
 			});
 		}
 	})
@@ -65,6 +67,19 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
 	var createSchedule = req.body.create;
 	var viewPast = req.body.view;
+	var editCurrent = req.body.edit;
+
+	if (typeof createSchedule != 'undefined') {
+		res.redirect('/newSchedulesPage');
+		// use radio buttons in table format to select
+	}
+	else if (typeof editCurrent != 'undefined') {
+		//
+	}
+	else if (typeof viewPast != 'undefined') {
+		res.redirect('/viewPastSchedulesPage');
+		// new page with selectable table of all past dates
+	}
 
 	console.log(createSchedule, viewPast);
 });

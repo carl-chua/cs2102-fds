@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+		<!-- Page Title -->
+    <title>CS2102 Template</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+		
+		<!-- CSS for Styling -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+		
+		<!-- JavaScript for Interactivity -->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <h1>Your schedule history</h1>
+		<table class="table">
+			<thead>
+				<tr>
+					<th scope="col">Start date</th>
+					<th scope="col">End date</th>
+					<th scope="col">Schedule type</th>
+					<th scope="col">Fee per delivery</th>
+					<th scope="col">Number of deliveries</th>
+					<th scope="col">Total delivery fees</th>
+					<th scope="col">Base salary</th>
+					<th scope="col">Total income</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(var i=0; i<scheduleData.length; i++) { %>
+				<tr>
+					<td><%= scheduleData[i].startdate%></td>
+					<td><%= scheduleData[i].enddate%></td>
+					<td><%= scheduleData[i].scheduletype%></td>
+					<td><%= scheduleData[i].feeperdelivery%></td>
+					<td><%= scheduleData[i].noofdeliveries%></td>
+					<td><%= (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries)%></td>
+					<td><%= scheduleData[i].basesalary%></td>
+					<td><%= (scheduleData[i].basesalary + (scheduleData[i].feeperdelivery * scheduleData[i].noofdeliveries))%></td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+  </body>
+</html>
