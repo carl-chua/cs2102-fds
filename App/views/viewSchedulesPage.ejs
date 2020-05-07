@@ -16,7 +16,7 @@
   <body>
     <h1>Your current schedule</h1>
     <h5><%= scheduleData[0].scheduletype %></h5>
-    <h5><%= scheduleData[0].startdate %> - <%= scheduleData[0].enddate %></h5>
+    <h5><%= scheduleData[0].startdate.toString().slice(0, 15) %> - <%= scheduleData[0].enddate.toString().slice(0, 15) %></h5>
     <br />
     <table class="table">
       <thead>

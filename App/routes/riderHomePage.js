@@ -12,7 +12,7 @@ const pool = new Pool({
 router.get('/', function(req, res, next) {
 	var riderInfoQuery = "SELECT * FROM DeliveryRiders DR WHERE riderId = " + req.session.riderId + " AND isDeleted = FALSE;";
 	pool.query(riderInfoQuery, (err, riderData) => {
-		var orderQuery = "SELECT O.orderId, O.deliveryFee, R.name AS rname, R.address AS raddress, O.address as caddress, C.name as cname, C.phoneNo, O.timePlaced FROM Orders O JOIN Restaurants R ON (O.restaurantId = R.restaurantId) JOIN Customers C ON (O.customerId = C.customerId) WHERE O.riderId = " + req.session.riderId + " AND O.status <> 'DELIVERED';";
+		var orderQuery = "SELECT O.paymentCardNoIfUsed, O.orderId, O.deliveryFee, R.name AS rname, R.address AS raddress, O.address as caddress, C.name as cname, C.phoneNo, O.timePlaced, O.timeRiderArrivesRestaurant, O.timeRiderLeavesRestaurant FROM Orders O JOIN Restaurants R ON (O.restaurantId = R.restaurantId) JOIN Customers C ON (O.customerId = C.customerId) WHERE O.riderId = " + req.session.riderId + " AND O.status <> 'DELIVERED';";
 		pool.query(orderQuery, (err, orderData) => {
 			console.log(err); console.log(orderData);
 			res.render('riderHomePage', {riderData: riderData.rows, orderData: orderData.rows});			
@@ -42,9 +42,14 @@ router.post('/', function(req, res, next) {
 	}
 
 	if (typeof arrivedAtRestaurant != 'undefined' || typeof collectedOrder != 'undefined' || typeof deliveredOrder != 'undefined') {
+		console.log(deliveredOrder);
 		pool.query(submit_timestamp, (err, submitData) => {
-			console.log(err);
-			res.send(err.message);
+			if (typeof err != "undefined") {
+				res.send(err.message);
+			}
+			else {
+				res.redirect('back');
+			}
 		});
 	}
 	else if (typeof viewSchedules != 'undefined') {
