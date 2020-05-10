@@ -137,6 +137,7 @@ function placeSQLOrder(address, cardNo, orderId) {
 	query = 
 	"UPDATE Orders SET \
 		" + addCardSentence +" \
+		haspaid = true, \
 		timePlaced = '" + dateTime.toISOString().replace('T',' ').replace('Z','') + "', \
 		address = '" + address + "' \
 	where orderId = " + orderId + ";"
