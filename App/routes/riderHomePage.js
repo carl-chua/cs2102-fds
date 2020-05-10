@@ -9,10 +9,44 @@ const pool = new Pool({
 
 // NEED edit email/details button as well!!
 
+
+function getSQLuserData(riderid) {
+	return "SELECT * \
+		FROM DeliveryRiders \
+		WHERE riderid = '" + riderid + "';";
+}
+
+function updateSQLuserData(riderid, input) {
+	var passwordLine = "password = '" + input.inputPassword + "',";
+	if (input.inputPassword == '-') {
+		passwordLine = "";
+	}
+	console.log("input:", input);
+	return "update DeliveryRiders set \
+		name = '" + input.inputName + "', \
+		email = '" + input.inputEmail + "', \
+		" + passwordLine + " \
+		phoneno = " + input.inputPhoneNo + " \
+		where riderid = " + riderid + ";";
+}
+
+function deactivateSQLrider(riderid) {
+	return "update DeliveryRiders set \
+		isDeleted = true \
+		where riderid = " + riderid + ";";
+}
+
+function activateSQLrider(riderid) {
+	return "update DeliveryRiders set \
+		isDeleted = false \
+		where riderid = " + riderid + ";";
+}
+
+
 router.get('/', function(req, res, next) {
 	var riderInfoQuery = "SELECT * FROM DeliveryRiders DR WHERE riderId = " + req.session.riderId + " AND isDeleted = FALSE;";
 	pool.query(riderInfoQuery, (err, riderData) => {
-		var orderQuery = "SELECT O.paymentCardNoIfUsed, O.orderId, O.deliveryFee, R.name AS rname, R.address AS raddress, O.address as caddress, C.name as cname, C.phoneNo, O.timePlaced, O.timeRiderArrivesRestaurant, O.timeRiderLeavesRestaurant FROM Orders O JOIN Restaurants R ON (O.restaurantId = R.restaurantId) JOIN Customers C ON (O.customerId = C.customerId) WHERE O.riderId = " + req.session.riderId + " AND O.status <> 'DELIVERED';";
+		var orderQuery = "SELECT O.paymentCardNoIfUsed, O.orderId, O.deliveryFee, R.name AS rname, R.address AS raddress, O.address as caddress, C.name as cname, C.phoneNo, O.timePlaced, O.timeRiderArrivesRestaurant, O.timeRiderLeavesRestaurant FROM Orders O JOIN Restaurants R ON (O.restaurantId = R.restaurantId) JOIN DeliveryRiders C ON (O.riderid = C.riderid) WHERE O.riderId = " + req.session.riderId + " AND O.status <> 'DELIVERED';";
 		pool.query(orderQuery, (err, orderData) => {
 			console.log(err); console.log(orderData);
 			res.render('riderHomePage', {riderData: riderData.rows, orderData: orderData.rows});			
@@ -58,6 +92,73 @@ router.post('/', function(req, res, next) {
 	else if (typeof viewDeliveries != 'undefined') {
 		res.redirect('/viewDeliveriesPage');
 	}
+});
+
+
+/* ACCCOUNTS */
+
+router.get('/accounts', function (req, res, next) {
+	let riderid = req.session.riderId;
+	pool.query(getSQLuserData(riderid), (err, userData) => {
+		console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+		var phoneNo = userData.rows[0].phoneno;
+		var overallRating = userData.rows[0].overallrating;
+
+		res.render('riderAccountPage', { 
+			riderid: riderid,
+			userName: name,
+			email: email,
+			password: password,
+			phoneNo: phoneNo,
+			overallRating: overallRating
+		});
+	});
+});
+router.post('/editAccountDetails', function(req, res, next) {
+	let riderid = req.session.riderId;
+	pool.query(getSQLuserData(riderid), (err, userData) => {
+		// console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+		var phoneNo = userData.rows[0].phoneno;
+		
+		res.render('riderAccountEditPage', { 
+			riderid: riderid,
+			userName: name,
+			email: email,
+			password: password,
+			phoneNo: phoneNo
+		});
+	});
+});
+router.post('/submitAccountDetails', function(req, res, next) {
+	let riderid = req.session.riderId;
+	var input = req.body;
+	var query = updateSQLuserData(riderid, input);
+	console.log(query);
+	pool.query(query, (err, data) => {
+		console.log(err)
+		res.redirect('/riderHomePage/accounts');
+	});
+});
+router.post('/deactivateAccount', function(req, res, next) {
+	let riderid = req.session.riderId;
+	pool.query(deactivateSQLrider(riderid), (err, data) => {
+		console.log(err)
+		res.redirect('/');
+	});
+});
+// hidden URL for reactivation
+// type: 
+// http://localhost:3000/riderHomePage/activateAccount?rid=1
+router.get('/activateAccount', function(req, res, next) {
+	pool.query(activateSQLrider(req.query.rid), (err, data) => {
+		res.redirect('/');
+	});
 });
 
 module.exports = router;
