@@ -952,7 +952,7 @@ BEGIN
 		WHERE C.customerId = NEW.customerId;
 	END IF; 
 
-	NEW.status = 'PREPARING';
+	NEW.status = 'PENDING';
 
 	RETURN NEW;
 END;
