@@ -27,22 +27,22 @@
     <h1>Menu</h1>
     <table class="table">
         <tr style="background-color: #FFFACD">
-            <th scope="col">Item ID</th>
             <th scope="col">Category</th>
+            <th scope="col">Item ID</th>
             <th scope="col">Name</th>
             <th scope="col">Price</th>
             <th scope="col">Qty Ordered Today</th>
             <th scope="col">Daily Limit</th>
             <th scope="col">Is Selling</th>
-            <th scope="col">Is Available</th>
+            <th scope="col">Is Available Today</th>
             <th scope="col">Rating</th>
         </tr>
         </thead>
         <tbody>
             <% for(var i=0; i<menu.length; i++) { %>
             <tr>
-                <td><%= menu[i].itemid%></td>
                 <td><%= menu[i].category%></td>
+                <td><%= menu[i].itemid%></td>
                 <td><%= menu[i].name%></td>
                 <td><%= menu[i].price%></td>
                 <td><%= menu[i].qtyorderedtoday%></td>
