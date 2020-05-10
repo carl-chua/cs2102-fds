@@ -25,6 +25,9 @@ router.post('/', function(req, res, next) {
     var minSpend = req.body.minSpend;
     var promoApplicableFor = req.body.promoApplicableFor;
     var daysSinceLastOrder = req.body.daysSinceLastOrder;
+    if (daysSinceLastOrder == "") {
+        daysSinceLastOrder = null;
+    }
     var createdFDPC = req.body.createdFDPC;
 
     var insert_statement = "INSERT INTO PromotionalCampaigns(promoCode, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder, isActive)VALUES('" + promoCode + "', '" + endDateTime + "'::timestamp, 'FDPC', '" + discountType + "', '" + discount + "', '" + minSpend + "', '" + promoApplicableFor + "', '" + daysSinceLastOrder + "', 'true');";

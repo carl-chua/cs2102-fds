@@ -109,7 +109,7 @@ function getTopItemQuery(restaurantId) {
   WHERE f.restaurantid = " +
   restaurantId +
   " GROUP BY f.itemId \
-  ORDER BY total ASC \
+  ORDER BY total DESC \
   LIMIT 5";
 }
 function getBottomItemQuery(restaurantId) {
@@ -118,7 +118,7 @@ function getBottomItemQuery(restaurantId) {
   WHERE f.restaurantid = " +
   restaurantId +
   " GROUP BY f.itemId \
-  ORDER BY total DESC \
+  ORDER BY total ASC \
   LIMIT 5";
 }
 
@@ -149,11 +149,11 @@ function getInactiveCampaignsQuery(restaurantId) {
 function getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder) {
   return "INSERT INTO PROMOTIONALCAMPAIGNS VALUES('" +
   promoCode +
-  "', " +
+  "', '" +
   startDateTime +
-  "', " +
+  "', '" +
   endDateTime +
-  ", '" +
+  "', '" +
   promoType +
   "', '" +
   discountType +
@@ -378,6 +378,7 @@ router.post("/addCampaign", function (req, res, next) {
 
   if (promoType == "RPC") {
     pool.query(getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder), (err, data) => {
+      console.log(err);
       pool.query(getAddPromotionalCampaignQuery(restaurantId, promoCode), (err, data) => {
       console.log(err);
       res.redirect("/restaurantStaffHomePage/campaigns");
@@ -385,6 +386,7 @@ router.post("/addCampaign", function (req, res, next) {
     });
   } else if (promoType == "FIPC") {
     pool.query(getAddCampaignQuery(promoCode, startDateTime, endDateTime, promoType, discountType, discount, minSpend, promoApplicableFor, daysSinceLastOrder), (err, data) => {
+      console.log(err);
       pool.query(getAddFoodItemCampaignQuery(restaurantId, promoCode, itemId), (err, data) => {
       console.log(err);
       res.redirect("/restaurantStaffHomePage/campaigns");
