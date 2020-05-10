@@ -251,7 +251,7 @@ router.use("/orders", function (req, res, next) {
   });
 });
 
-router.use("/toPreparing", function (req, res, next) {]
+router.use("/toPreparing", function (req, res, next) {
   var orderId = req.body.orderId;
   pool.query(getChangeOrderStatusToPreparingQuery(orderId), (err, data) => {
     console.log(err);

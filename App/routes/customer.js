@@ -133,7 +133,7 @@ function placeSQLOrder(address, cardNo, orderId) {
 		addCardSentence = "paymentCardNoIfUsed = '" + cardNo + "', ";
 	}
 	let dateTime = new Date(Date.now())
-	dateTime.setHours(dateTime.getHours() + 4)
+	dateTime.setHours(dateTime.getHours() + 8)
 	query = 
 	"UPDATE Orders SET \
 		" + addCardSentence +" \

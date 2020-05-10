@@ -861,7 +861,7 @@ BEGIN
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 4 THEN MWS.thuShift
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 5 THEN MWS.friShift
 											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 6 THEN MWS.satShift
-										    WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 7 THEN MWS.sunShift
+										    WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 0 THEN MWS.sunShift
 										END
 									= ANY(CASE
 											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 10) THEN ARRAY[1]
@@ -1129,8 +1129,8 @@ INSERT INTO DeliveryRiders
 values
 (1, 'rider001', 'password', '81111111', 'rider001@gmail.com', false, true, 4.67),
 (2, 'rider002', 'password', '82222222', 'rider002@gmail.com', false, true, 4.75),
-(3, 'rider003', 'password', '83333333', 'rider003@gmail.com', true, true, 4.32),
-(4, 'rider004', 'password', '84444444', 'rider004@gmail.com', true, false, 4.03),
+(3, 'rider003', 'password', '83333333', 'rider003@gmail.com', false, true, 4.32),
+(4, 'rider004', 'password', '84444444', 'rider004@gmail.com', false, false, 4.03),
 (5, 'rider005', 'password', '85555555', 'rider005@gmail.com', false, true, 4.85),
 (6, 'rider006', 'password', '86666666', 'rider006@gmail.com', false, true, 4.97),
 (7, 'rider007', 'password', '87777777', 'rider007@gmail.com', false, true, 4.87),
@@ -1162,8 +1162,8 @@ values
 (3,null,null,3,4,2,3,1),
 (4,2,null,null,4,2,1,3),
 (5,3,2,null,null,1,2,2),
-(6,1,3,2,null,null,2,2),
-(7,4,4,2,1,null,null,2);
+(6,1,3,2,null,null,2,4),
+(7,4,4,2,1,null,null,4);
 
 INSERT INTO Schedules
 values
