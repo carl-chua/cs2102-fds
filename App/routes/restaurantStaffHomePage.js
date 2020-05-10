@@ -21,6 +21,38 @@ var staffId;
 var staffName;
 var restaurantId;
 
+function getSQLuserData(restaurantstaffid) {
+	return "SELECT * \
+		FROM restaurantStaffs \
+		WHERE restaurantstaffid = '" + restaurantstaffid + "';";
+}
+
+function updateSQLuserData(restaurantstaffid, input) {
+	if (input.inputCardNo === "-") input.inputCardNo = "null";
+	var passwordLine = "password = '" + input.inputPassword + "',";
+	if (input.inputPassword == '-') {
+		passwordLine = "";
+	}
+	console.log("input:", input);
+	return "update restaurantStaffs set \
+		name = '" + input.inputName + "', \
+		" + passwordLine + " \
+		email = '" + input.inputEmail + "' \
+		where restaurantstaffid = " + restaurantstaffid + ";";
+}
+
+function deactivateSQLrstaff(restaurantstaffid) {
+	return "update restaurantStaffs set \
+		isDeleted = true \
+		where restaurantstaffid = " + restaurantstaffid + ";";
+}
+
+function activateSQLrstaff(restaurantstaffid) {
+	return "update restaurantStaffs set \
+		isDeleted = false \
+		where restaurantstaffid = " + restaurantstaffid + ";";
+}
+
 function getPendingOrdersQuery(restaurantId) {
   return "SELECT o.orderid, o.foodsubtotal, o.timeplaced, f.name, f.price, p.qtyordered \
     FROM ORDERS o JOIN PICKS p ON o.orderid = p.orderid JOIN FOODMENUITEMS f ON p.itemid = f.itemid \
@@ -446,6 +478,62 @@ router.post("/admin", function (req, res, next) {
 
 
 
+/* ACCCOUNTS */
+
+router.get('/accounts', function (req, res, next) {
+  console.log("StaffId: ", staffId);
+	pool.query(getSQLuserData(staffId), (err, userData) => {
+		console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+
+		res.render('rstaffAccountPage', { 
+			restaurantstaffid: staffId,
+			userName: name,
+			email: email,
+			password: password
+		});
+	});
+});
+router.post('/editAccountDetails', function(req, res, next) {
+	pool.query(getSQLuserData(staffId), (err, userData) => {
+		// console.log(userData.rows[0]);
+		var name = userData.rows[0].name;
+		var email = userData.rows[0].email;
+		var password = '**********';
+
+		res.render('rstaffAccountEditPage', { 
+			restaurantstaffid: staffId,
+			userName: name,
+			email: email,
+			password: password
+		});
+	});
+});
+router.post('/submitAccountDetails', function(req, res, next) {
+	var input = req.body;
+	var query = updateSQLuserData(staffId, input);
+	console.log(query);
+	pool.query(query, (err, data) => {
+		console.log(err)
+		res.redirect('/restaurantStaffHomePage/accounts');
+	});
+});
+router.post('/deactivateAccount', function(req, res, next) {
+	pool.query(deactivateSQLrstaff(staffId), (err, data) => {
+		console.log(err)
+		res.redirect('/');
+	});
+});
+// hidden URL for reactivation
+// type: 
+// http://localhost:3000/restaurantStaffHomePage/activateAccount?rsid=4
+router.get('/activateAccount', function(req, res, next) {
+	pool.query(activateSQLrstaff(req.query.rsid), (err, data) => {
+		res.redirect('/');
+	});
+});
 
 
 
