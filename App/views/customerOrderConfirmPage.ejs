@@ -93,7 +93,7 @@
 	<% } %>
 	<% if (promoSuccess != null && promoSuccess == false) { %>
 	<div class="alert alert-warning" role="alert" id="promoFailAlert">
-		Promo Code entered is invalid
+		Promo Code entered is invalid or is not applicable
 	</div>
 	<br>
 	<% } %>
@@ -101,7 +101,9 @@
 	<h4>Promo Code Discount: $<%= order.promodiscount%></h4>
 	<br>
 
-
+	<% let totalbill = (parseFloat(order.foodsubtotal) + parseFloat(order.deliveryfee) - parseFloat(order.promodiscount)).toFixed(2); %>
+	<h2>Total Bill: $ <%= totalbill %> </h2>
+	<br>
 
 	<form id="html_form" action="/customer/placeOrder" role="form" method="post">
 

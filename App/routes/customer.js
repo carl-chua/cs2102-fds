@@ -176,14 +176,13 @@ function getPromoDetails(inputPromoCode) {
 
 function getPromoActiveNow(inputPromoCode) {
 	inputPromoCode = inputPromoCode.trim();
-	currentSQLTime = 
 	query = 
 	"select * \
 	from promotionalcampaigns \
 	where promoCode = '" + inputPromoCode + "'\
 	and isActive = true \
-	and startDateTime < " + currentSQLTime() + ", \
-	and endDateTime > " + currentSQLTime() + ";"
+	and startDateTime < '" + currentSQLTime() + "' \
+	and endDateTime > '" + currentSQLTime() + "';"
 	return query;
 }
 
@@ -257,15 +256,16 @@ router.post('/addItem', function (req, res, next) {
 		console.log("to create new order");
 		var getMaxOrderId = "SELECT MAX(orderId) FROM Orders;";
 		pool.query(getMaxOrderId, (err, orderData) => {
-			currentOrderId = orderData.rows[0].max + 1;
+			var newOrderId = orderData.rows[0].max + 1;
 			pool.query(getSQLridOfItem(itemIdToAdd), (err, data) => {
-				// console.log(data)
 				currentOrderRestaurantId = data.rows[0].rid;
-				pool.query(insertSQLNewOrder(currentOrderId, customerId, currentOrderRestaurantId), (err, orderData) => {
-					console.log("Order created:", err);
-					var check_items_exist_query = isSQLitemInOrder(itemIdToAdd, currentOrderId);
-					pool.query(check_items_exist_query, (err, existData) => {
-						// console.log(existData);
+
+				pool.query(insertSQLNewOrder(newOrderId, customerId, currentOrderRestaurantId), (err, orderData) => {
+					console.log("insert new orderid:", newOrderId);
+					currentOrderId = newOrderId;
+
+					pool.query(isSQLitemInOrder(itemIdToAdd, currentOrderId), (err, existData) => {
+						console.log("entries with item: ", existData.rowCount);
 						if (existData.rowCount == 1) {
 							// item already in order
 							update_query = "UPDATE Picks SET \
@@ -278,7 +278,7 @@ router.post('/addItem', function (req, res, next) {
 								" + currentOrderId + ", " + itemIdToAdd + ", " + itemQty + ");";
 						}
 						pool.query(update_query, (err, updateData) => {
-							console.log("Order Updated: ", updateData);
+							console.log("Order Updated: ", err);
 							res.redirect('/customer/orders');
 						});
 					})
@@ -290,8 +290,7 @@ router.post('/addItem', function (req, res, next) {
 		// current Order exists
 		var check_items_exist_query = isSQLitemInOrder(itemIdToAdd, currentOrderId);
 		pool.query(check_items_exist_query, (err, existData) => {
-			// console.log(existData);
-			var updateOrder
+			console.log("entries with item: ", existData.rowCount);
 			if (existData.rowCount == 1) {
 				// item already in order
 				update_query = "UPDATE Picks SET \
@@ -418,16 +417,22 @@ router.post('/checkPromo', function (req, res, next) {
 	pool.query(query, (err, data) => {
 		console.log("promo: ", data.rows);
 		if (data.rowCount == 0) {
-			console.log("promo does not currently exist")
+			console.log("promo does not currently exist or is not applicable")
 			req.session.promoSuccess = false;
 			res.redirect('/customer/confirmOrder');
 			return
 		}
 		let query = updateOrderPromoCode(currentOrderId, data.rows[0].promocode);
 		pool.query(query, (err, data) => {
-			req.session.promoSuccess = true;
 			console.log("promoSuccess: ",err);
-			res.redirect('/customer/confirmOrder');
+			if (err == null) {
+				req.session.promoSuccess = true;
+				// console.log("update data: ",data);
+				res.redirect('/customer/confirmOrder');
+			} else {
+				req.session.promoSuccess = false;
+				res.redirect('/customer/confirmOrder');
+			}
 		});
 		// res.send("check promo code not implemented!")
 		return 
