@@ -56,6 +56,10 @@ function getSQLRestaurants() {
 	ORDER BY R.restaurantId;";
 }
 
+function getSQLRestaurantDetails(rid) {
+	return "select * from restaurants where restaurantid = " + rid + ";";
+}
+
 function getSQLPicks(customerID) {
 	return "WITH Temptable AS \
 		(SELECT O.orderId, O.foodSubTotal, R.restaurantId, R.name AS rname, P.itemId, FMI.name AS iname, FMI.price, P.qtyOrdered, (P.qtyOrdered * FMI.price) AS sumPrice \
@@ -199,6 +203,11 @@ router.get('/orders', function (req, res, next) {
 	customerName = customerTuple.name;
 	// console.log("req:", req);
 
+	minSpendErrorFlag = req.session.minSpendError;
+	minspend = req.session.minspend;
+	req.session.minSpendError = false;
+	req.session.minSpend = null;
+
 	pool.query(getSQLCurrentOrder(customerId), (err, data) => {
 		console.log("current Orders:",data.rowCount);
 		if(data.rowCount == 1)  {
@@ -216,7 +225,9 @@ router.get('/orders', function (req, res, next) {
 					res.render('customerCurrentOrder', {
 						userName: customerName,
 						picksData: picksData.rows,
-						foodData: foodData.rows
+						foodData: foodData.rows,
+						minSpendErrorFlag: minSpendErrorFlag,
+						minspend: minspend
 					});
 				})
 			});
@@ -372,38 +383,44 @@ router.get('/confirmOrder', function (req, res, next) {
 	}
 
 	let promoSuccess = req.session.promoSuccess;
-	req.session.promoSuccess = null;
-
- 	pool.query(getSQLPicks(customerId), (err, picksData) => {
+	
+	pool.query(getSQLRestaurantDetails(currentOrderRestaurantId), (err, restaurantData) => {
 		pool.query(getSQLCurrentOrder(customerId), (err, order) => {
-			pool.query(getSQLuserData(customerId), (err, userData) => {
-				// console.log(err); 
-				// console.log(picksData);
-				var addresses = [
-					userData.rows[0].mostrecentaddress1,
-					userData.rows[0].mostrecentaddress2,
-					userData.rows[0].mostrecentaddress3,
-					userData.rows[0].mostrecentaddress4,
-					userData.rows[0].mostrecentaddress5
-				];
-				var addressDisplay = [];
-				for (i = 0; i<addresses.length; i++) {
-					if (addresses[i] != null) {
-						addressDisplay.push(addresses[i])
+			if (parseFloat(order.rows[0].foodsubtotal) < parseFloat(restaurantData.rows[0].minspend)) {
+				req.session.minSpendError = true;
+				req.session.minspend = parseFloat(restaurantData.rows[0].minspend);
+				res.redirect('/customer/orders');
+			}
+			pool.query(getSQLPicks(customerId), (err, picksData) => {
+			   pool.query(getSQLuserData(customerId), (err, userData) => {
+					// console.log(err); 
+					// console.log(picksData);
+					var addresses = [
+						userData.rows[0].mostrecentaddress1,
+						userData.rows[0].mostrecentaddress2,
+						userData.rows[0].mostrecentaddress3,
+						userData.rows[0].mostrecentaddress4,
+						userData.rows[0].mostrecentaddress5
+					];
+					var addressDisplay = [];
+					for (i = 0; i<addresses.length; i++) {
+						if (addresses[i] != null) {
+							addressDisplay.push(addresses[i])
+						}
 					}
-				}
-				if (order.rows[0].promocode != null){
-					promoSuccess = true;
-				}
-				// console.log("addresDisplay: ",addressDisplay);
-				res.render('customerOrderConfirmPage', {
-					userName: customerName,
-					picksData: picksData.rows,
-					order: order.rows[0],
-					addresses: addressDisplay,
-					cardNo: userData.rows[0].registeredcardno,
-					promoSuccess: promoSuccess
-				});
+					if (order.rows[0].promocode != null){
+						promoSuccess = true;
+					}
+					// console.log("addresDisplay: ",addressDisplay);
+					res.render('customerOrderConfirmPage', {
+						userName: customerName,
+						picksData: picksData.rows,
+						order: order.rows[0],
+						addresses: addressDisplay,
+						cardNo: userData.rows[0].registeredcardno,
+						promoSuccess: promoSuccess
+					});
+				})
 			});
 		})
  	})

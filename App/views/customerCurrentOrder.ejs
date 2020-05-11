@@ -65,7 +65,7 @@
                     <td><%= picksData[i].sumprice%></td>
                     <td><input type="number" name="removeQty" min="1" step="1"></td>
                     <td><button type="submit" class="btn btn-primary" name="itemIdtoRemove"
-                        value='<%= picksData[i].itemid%>'>Remove</button></td>
+                            value='<%= picksData[i].itemid%>'>Remove</button></td>
                 </form>
             </tr>
             <% } %>
@@ -74,48 +74,52 @@
     <br />
     <% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
     <h5>Total price: $<%= j %></h5>
+    </form>
+    <% if (minSpendErrorFlag) { %>
+    <br />
+    <div class="alert alert-warning" role="alert" id="loginAlert">
+        This restaurant needs a minimum spending of $<%= minspend %>.
+    </div>
+    <% } %>
     <form id="html_form" action="/customer/confirmOrder" role="form" method="get">
         <button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
+        <br />
     </form>
     <br />
     <form id="html_form" action="/customer/deleteCurrentOrder" role="form" method="post">
-        <button type="submit" class="btn btn-light btn-lg btn-block" name="add" value='<%= foodData[i].itemid%>'>Forfeit Current Order and Go Back to
+        <button type="submit" class="btn btn-light btn-lg btn-block" name="add" value='<%= foodData[i].itemid%>'>Forfeit
+            Current Order and Go Back to
             Restaurant Selection</button>
-    </form>
-    <br />
-    <div class="alert alert-warning collapse" role="alert" id="loginAlert">
-        Either the user account does not exist or the password is incorrect.
-    </div>
-    <br />
-    <h2>Pick Some Food!</h2>
-    <br />
-    <table class="table">
-        <thead>
-            <tr>
+        <br />
+        <h2>Pick Some Food!</h2>
+        <br />
+        <table class="table">
+            <thead>
+                <tr>
 
-                <th scope="col">Name</th>
-                <th scope="col">Price</th>
-                <th scope="col">Category</th>
-                <th scope="col">Rating</th>
-                <th scope="col">Quantity</th>
-                <th scope="col">Select</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% for(var i=0; i<foodData.length; i++) { %>
-            <tr>
-                <form id="html_form" action="/customer/addItem" role="form" method="post">
+                    <th scope="col">Name</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Rating</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Select</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for(var i=0; i<foodData.length; i++) { %>
+                <tr>
+                    <form id="html_form" action="/customer/addItem" role="form" method="post">
 
-                    <td><%= foodData[i].itemname%></td>
-                    <td><%= foodData[i].price%></td>
-                    <td><%= foodData[i].category%></td>
-                    <td><%= foodData[i].rating%></td>
-                    <td><input type="number" name="itemQty" min="1" step="1"></td>
-                    <td><button type="submit" class="btn btn-primary" name="add"
-                            value='<%= foodData[i].itemid%>'>Select</button></td>
-                </form>
-            </tr>
-            <% } %>
-        </tbody>
-    </table>
+                        <td><%= foodData[i].itemname%></td>
+                        <td><%= foodData[i].price%></td>
+                        <td><%= foodData[i].category%></td>
+                        <td><%= foodData[i].rating%></td>
+                        <td><input type="number" name="itemQty" min="1" step="1"></td>
+                        <td><button type="submit" class="btn btn-primary" name="add"
+                                value='<%= foodData[i].itemid%>'>Select</button></td>
+                    </form>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
 </body>
