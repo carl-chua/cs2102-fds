@@ -968,10 +968,12 @@ CREATE TRIGGER rider_allocation_trigger
 -- update order status to 'DELIVERING' when rider leaves restaurant
 CREATE OR REPLACE FUNCTION order_delivering_update() RETURNS TRIGGER AS $$
 BEGIN
-	IF OLD.status = 'READY-FOR-DELIVERY' THEN
-		NEW.status = 'DELIVERING';
+    IF NEW.timeRiderArrivesRestaurant IS NULL THEN
+        RAISE exception 'Please acknowledge that you have arrived at the restaurant first.';
+    ELSIF OLD.status <> 'READY-FOR-DELIVERY' THEN
+        RAISE exception 'Please wait until the order has finished preparation first.';
 	ELSE
-		RAISE exception 'Please wait until the order has finished preparation first.';
+		NEW.status = 'DELIVERING';
 	END IF;
 	RETURN NEW;
 END;
