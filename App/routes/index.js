@@ -89,7 +89,8 @@ router.post('/', function(req, res, next) {
 			res.redirect('restaurantStaffHomePage');
 		}
 		else if (managerVal == 4) {
-			res.redirect('/managerHomePage/?user=' + data.rows[0].fdsmanagerid);
+			req.session.fdsmanagerid = data.rows[0].fdsmanagerid
+			res.redirect('/managerHomePage');
 		}		
 	});
 	
