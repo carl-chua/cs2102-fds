@@ -838,66 +838,6 @@ CREATE TRIGGER order_confirmation_trigger
 	FOR EACH ROW
 	EXECUTE FUNCTION order_details_check();
 
--- allocate rider once order is placed successfully
--- if no riders available, raise error
-CREATE OR REPLACE FUNCTION allocate_rider() RETURNS TRIGGER AS $$
-DECLARE
-	riderChosenId integer;
-	monthlyShift integer;
-    discountType discountTypeEnum;
-BEGIN
-	SELECT DR.riderId INTO riderChosenId
-	FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
-						   LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
-						   FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
-	WHERE DR.isAvailable = TRUE
-    AND DR.isDeleted = FALSE
-	AND (S.startDate <= NEW.timePlaced AND S.endDate >= NEW.timePlaced)
-	AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE)][EXTRACT(HOUR FROM NEW.timePlaced) - 9] = TRUE)
-	OR (S.scheduleType = 'MONTHLY' AND CASE
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 1 THEN MWS.monShift
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 2 THEN MWS.tueShift
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 3 THEN MWS.wedShift
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 4 THEN MWS.thuShift
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 5 THEN MWS.friShift
-											WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 6 THEN MWS.satShift
-										    WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 0 THEN MWS.sunShift
-										END
-									= ANY(CASE
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 10) THEN ARRAY[1]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 11) THEN ARRAY[1,2]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 12) THEN ARRAY[1,2,3]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) BETWEEN 13 AND 19) THEN ARRAY[1,2,3,4]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 20) THEN ARRAY[2,3,4]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 21) THEN ARRAY[3,4]
-											WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 22) THEN ARRAY[4]
-		
-										END)))
-	LIMIT 1;
-
-	IF riderChosenId IS NULL THEN
-		RAISE exception 'Sorry! There are no riders currently available at this time. Please try again later!';
-	END IF;
-
-	UPDATE DeliveryRiders
-	SET isAvailable = FALSE
-	WHERE riderId = riderChosenId;
-
-	NEW.riderId = riderChosenId;
-
-    SELECT PC.discountType INTO discountType
-    FROM PromotionalCampaigns PC
-    WHERE PC.promoCode = NEW.promoCode;
-
-	NEW.timeRiderAccepts = NEW.timePlaced; -- change to NOW() later
-	RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER rider_allocation_trigger
-	BEFORE UPDATE OF timePlaced ON Orders
-	FOR EACH ROW
-	EXECUTE FUNCTION allocate_rider();
 
 -- increment qtyOrderedToday of all food items chosen
 -- add delivery address to user's 5 most recent addresses (if not already there), push oldest address out
@@ -952,8 +892,6 @@ BEGIN
 		WHERE C.customerId = NEW.customerId;
 	END IF; 
 
-	NEW.status = 'PENDING';
-
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -963,22 +901,69 @@ CREATE TRIGGER time_placed_trigger
 	FOR EACH ROW
 	EXECUTE FUNCTION update_details();
 
--- update order status to 'READY-FOR-DELIVERY' when rider arrives at restaurant
-CREATE OR REPLACE FUNCTION order_ready_update() RETURNS TRIGGER AS $$
+-- allocate rider once order is accepted by restaurant
+-- if no riders available, raise error
+CREATE OR REPLACE FUNCTION allocate_rider() RETURNS TRIGGER AS $$
+DECLARE
+    riderChosenId integer;
+    monthlyShift integer;
+    discountType discountTypeEnum;
 BEGIN
-	IF OLD.status = 'PREPARING' THEN
-		NEW.status = 'READY-FOR-DELIVERY';
-	ELSE
-		RAISE exception 'The order has not been confirmed by the restaurant yet.';
-	END IF;
-	RETURN NEW;
+    IF NEW.status = 'PREPARING' THEN
+        SELECT DR.riderId INTO riderChosenId
+        FROM DeliveryRiders DR JOIN Schedules S ON (DR.riderId = S.riderId) 
+                               LEFT JOIN MonthlyWorkSchedules MWS ON (MWS.scheduleId = S.scheduleId)
+                               FULL JOIN WeeklyWorkSchedules WWS ON (WWS.scheduleId = S.scheduleId)
+        WHERE DR.isAvailable = TRUE
+        AND DR.isDeleted = FALSE
+        AND (S.startDate <= NEW.timePlaced AND S.endDate >= NEW.timePlaced)
+        AND ((S.scheduleType = 'WEEKLY' AND WWS.hourlySchedule[EXTRACT(DOW FROM NEW.timePlaced::DATE)][EXTRACT(HOUR FROM NEW.timePlaced) - 9] = TRUE)
+        OR (S.scheduleType = 'MONTHLY' AND CASE
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 1 THEN MWS.monShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 2 THEN MWS.tueShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 3 THEN MWS.wedShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 4 THEN MWS.thuShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 5 THEN MWS.friShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 6 THEN MWS.satShift
+                                                WHEN (EXTRACT(DOW FROM NEW.timePlaced::DATE)) = 0 THEN MWS.sunShift
+                                            END
+                                        = ANY(CASE
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 10) THEN ARRAY[1]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 11) THEN ARRAY[1,2]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 12) THEN ARRAY[1,2,3]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) BETWEEN 13 AND 19) THEN ARRAY[1,2,3,4]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 20) THEN ARRAY[2,3,4]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 21) THEN ARRAY[3,4]
+                                                WHEN (EXTRACT(HOUR FROM NEW.timePlaced) = 22) THEN ARRAY[4]
+            
+                                            END)))
+        LIMIT 1;
+
+        IF riderChosenId IS NULL THEN
+            RAISE exception 'Sorry! There are no riders currently available at this time. Please try again later!';
+        END IF;
+
+        UPDATE DeliveryRiders
+        SET isAvailable = FALSE
+        WHERE riderId = riderChosenId;
+
+        NEW.riderId = riderChosenId;
+
+        SELECT PC.discountType INTO discountType
+        FROM PromotionalCampaigns PC
+        WHERE PC.promoCode = NEW.promoCode;
+
+        NEW.timeRiderAccepts = NEW.timePlaced; -- change to NOW() later
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER order_ready_trigger
-	BEFORE UPDATE OF timeRiderArrivesRestaurant ON Orders
-	FOR EACH ROW
-	EXECUTE FUNCTION order_ready_update();
+CREATE TRIGGER rider_allocation_trigger
+    BEFORE UPDATE OF status ON Orders
+    FOR EACH ROW
+    EXECUTE FUNCTION allocate_rider();
+
 
 -- update order status to 'DELIVERING' when rider leaves restaurant
 CREATE OR REPLACE FUNCTION order_delivering_update() RETURNS TRIGGER AS $$
@@ -986,7 +971,7 @@ BEGIN
 	IF OLD.status = 'READY-FOR-DELIVERY' THEN
 		NEW.status = 'DELIVERING';
 	ELSE
-		RAISE exception 'Please acknowledge that the order is ready for collection first.';
+		RAISE exception 'Please wait until the order has finished preparation first.';
 	END IF;
 	RETURN NEW;
 END;
@@ -1331,10 +1316,16 @@ UPDATE Orders SET
 	timePlaced = '2020-05-05 12:00:01'
 where orderId = 1;
 -- restaurant accepts order
+UPDATE Orders SET
+    status = 'PREPARING'
+where orderId = 1;
 -- FDS assigns rider
 -- rider accepts order
 
 -- restaurant finishes preparing order
+UPDATE Orders SET
+    status = 'READY-FOR-DELIVERY'
+where orderId = 1;
 -- rider arrives at restaurant
 UPDATE Orders SET
     timeRiderArrivesRestaurant = '2020-05-05 12:10:44'
@@ -1381,6 +1372,9 @@ UPDATE Orders SET
     address = 'customer002add001area004'
 where orderId = 2;
 -- restaurant accepts order
+UPDATE Orders SET
+    status = 'PREPARING'
+where orderId = 2;
 
 -- FDS assigns rider
 -- rider accepts order
@@ -1389,6 +1383,9 @@ UPDATE Orders SET
     timeRiderArrivesRestaurant = '2020-05-04 12:18:44'
 where orderId = 2;
 -- restaurant finishes preparing order
+UPDATE Orders SET
+    status = 'READY-FOR-DELIVERY'
+where orderId = 2;
 -- rider leaves restaurant
 UPDATE Orders SET
     timeRiderLeavesRestaurant = '2020-05-04 12:22:01'
@@ -1424,6 +1421,9 @@ UPDATE Orders SET
     address = 'customer003add001area004'
 where orderId = 3;
 -- restaurant accepts order
+UPDATE Orders SET
+    status = 'PREPARING'
+where orderId = 3;
 -- FDS assigns rider
 -- rider accepts order
 
@@ -1432,6 +1432,9 @@ UPDATE Orders SET
     timeRiderArrivesRestaurant = '2020-05-06 12:18:44'
 where orderId = 3;
 -- restaurant finishes preparing order
+UPDATE Orders SET
+    status = 'READY-FOR-DELIVERY'
+where orderId = 3;
 -- rider leaves restaurant
 UPDATE Orders SET
     timeRiderLeavesRestaurant = '2020-05-06 12:22:01'
@@ -1464,8 +1467,16 @@ UPDATE Orders SET
     address = 'customer004add001area001'
 where orderId = 4;
 -- restaurant accepts order
+UPDATE Orders SET
+    status = 'PREPARING'
+where orderId = 4;
 -- FDS assigns rider
 -- rider accepts order
+
+-- restaurant finishes preparing order
+UPDATE Orders SET
+    status = 'READY-FOR-DELIVERY'
+where orderId = 4;
 
 -- rider arrives at restaurant
 UPDATE Orders SET
@@ -1504,6 +1515,9 @@ UPDATE Orders SET
     address = 'customer005add001area005'
 where orderId = 5;
 -- restaurant accepts order
+UPDATE Orders SET
+    status = 'PREPARING'
+where orderId = 5;
 -- FDS assigns rider
 -- rider accepts order
 
@@ -1512,6 +1526,9 @@ UPDATE Orders SET
     timeRiderArrivesRestaurant = '2020-05-04 12:18:44'
 where orderId = 5;
 -- restaurant finishes preparing order
+UPDATE Orders SET
+    status = 'READY-FOR-DELIVERY'
+where orderId = 5;
 
 -- rider leaves restaurant
 UPDATE Orders SET
