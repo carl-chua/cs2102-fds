@@ -127,21 +127,34 @@ function insertSQLAddress(address) {
 	return query;
 }
 
+function currentSQLTime() {
+	let dateTime = new Date(Date.now());
+	dateTime.setHours(dateTime.getHours() + 8);
+	return dateTime.toISOString().replace('T',' ').replace('Z','');
+}
+
 function placeSQLOrder(address, cardNo, orderId) {
 	let addCardSentence = ""
 	if (cardNo != null) {
 		addCardSentence = "paymentCardNoIfUsed = '" + cardNo + "', ";
 	}
-	let dateTime = new Date(Date.now())
-	dateTime.setHours(dateTime.getHours() + 8)
 	query = 
 	"UPDATE Orders SET \
 		" + addCardSentence +" \
 		haspaid = true, \
-		timePlaced = '" + dateTime.toISOString().replace('T',' ').replace('Z','') + "', \
+		timePlaced = '" + currentSQLTime() + "', \
 		address = '" + address + "' \
 	where orderId = " + orderId + ";"
 	return query
+}
+
+function updateOrderPromoCode(orderid, promoCode) {
+	promoCode = promoCode.trim();
+	let query = 
+	"UPDATE Orders SET \
+		promocode = '" + promoCode + "' \
+	where orderId = " + orderid + ";"
+	return query;
 }
 
 function getOrderHistory(customerId) {
@@ -158,6 +171,19 @@ function getPromoDetails(inputPromoCode) {
 		natural left join RestaurantPromotionalCampaigns) \
 		natural left join FoodItemPromotionalCampaigns \
 	where promoCode = '" + inputPromoCode + "';"
+	return query;
+}
+
+function getPromoActiveNow(inputPromoCode) {
+	inputPromoCode = inputPromoCode.trim();
+	currentSQLTime = 
+	query = 
+	"select * \
+	from promotionalcampaigns \
+	where promoCode = '" + inputPromoCode + "'\
+	and isActive = true \
+	and startDateTime < " + currentSQLTime() + ", \
+	and endDateTime > " + currentSQLTime() + ";"
 	return query;
 }
 
@@ -197,6 +223,7 @@ router.get('/orders', function (req, res, next) {
 			});
 			// res.send("currentorderpage");
 		} else {
+			currentOrderId = null;
 			console.log("no current order")
 			pool.query(getSQLRestaurants(), (err, restaurants) => {
 				res.render('customerOrderPage', {
@@ -239,7 +266,6 @@ router.post('/addItem', function (req, res, next) {
 					var check_items_exist_query = isSQLitemInOrder(itemIdToAdd, currentOrderId);
 					pool.query(check_items_exist_query, (err, existData) => {
 						// console.log(existData);
-						var updateOrder
 						if (existData.rowCount == 1) {
 							// item already in order
 							update_query = "UPDATE Picks SET \
@@ -339,12 +365,15 @@ router.get('/history', function (req, res, next) {
 	// })
 })
 
-router.post('/confirmOrder', function (req, res, next) {
+router.get('/confirmOrder', function (req, res, next) {
 	// res.send("hello" + req.body.confirm);
 	if (currentOrderId == null) {
 		res.redirect('/customer/orders');
 		return;
 	}
+
+	let promoSuccess = req.session.promoSuccess;
+	req.session.promoSuccess = null;
 
  	pool.query(getSQLPicks(customerId), (err, picksData) => {
 		pool.query(getSQLCurrentOrder(customerId), (err, order) => {
@@ -364,12 +393,17 @@ router.post('/confirmOrder', function (req, res, next) {
 						addressDisplay.push(addresses[i])
 					}
 				}
-				console.log("addresDisplay: ",addressDisplay);
+				if (order.rows[0].promocode != null){
+					promoSuccess = true;
+				}
+				// console.log("addresDisplay: ",addressDisplay);
 				res.render('customerOrderConfirmPage', {
 					userName: customerName,
 					picksData: picksData.rows,
+					order: order.rows[0],
 					addresses: addressDisplay,
-					cardNo: userData.rows[0].registeredcardno
+					cardNo: userData.rows[0].registeredcardno,
+					promoSuccess: promoSuccess
 				});
 			});
 		})
@@ -379,16 +413,23 @@ router.post('/confirmOrder', function (req, res, next) {
 router.post('/checkPromo', function (req, res, next) {
 	// res.send("check promo code not implemented!")
 	let inputPromoCode = req.body.inputPromoCode;
-	let query = getPromoDetails(inputPromoCode);
+	let query = getPromoActiveNow(inputPromoCode);
 	console.log(query);
 	pool.query(query, (err, data) => {
 		console.log("promo: ", data.rows);
 		if (data.rowCount == 0) {
-			console.log("promo doesn't exist")
-			res.redirect('/customers/confirmOrder');
+			console.log("promo does not currently exist")
+			req.session.promoSuccess = false;
+			res.redirect('/customer/confirmOrder');
 			return
 		}
-		res.send("check promo code not implemented!")
+		let query = updateOrderPromoCode(currentOrderId, data.rows[0].promocode);
+		pool.query(query, (err, data) => {
+			req.session.promoSuccess = true;
+			console.log("promoSuccess: ",err);
+			res.redirect('/customer/confirmOrder');
+		});
+		// res.send("check promo code not implemented!")
 		return 
 		let promo = data.rows[0]
 		if (promo.restaurantid != null  && promo.itemid != null) {
@@ -410,7 +451,6 @@ router.post('/checkPromo', function (req, res, next) {
 
 	})
 });
-
 
 router.post('/placeOrder', function (req, res, next) {
 	
@@ -437,7 +477,7 @@ router.post('/placeOrder', function (req, res, next) {
 			pool.query(query, (err, data) => {
 				console.log("orderPlaced: ", err);
 				if (err == null) {
-					currentOrderId == null;
+					currentOrderId = null;
 				}
 				console.log("currentOrderId: ", currentOrderId);
 				res.redirect('/customer/history');

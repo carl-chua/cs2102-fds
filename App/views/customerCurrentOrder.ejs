@@ -74,7 +74,7 @@
     <br />
     <% var j=0; for(var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
     <h5>Total price: $<%= j %></h5>
-    <form id="html_form" action="/customer/confirmOrder" role="form" method="post">
+    <form id="html_form" action="/customer/confirmOrder" role="form" method="get">
         <button type="submit" class="btn btn-primary" name="confirm" value="1">Confirm order</button>
     </form>
     <br />

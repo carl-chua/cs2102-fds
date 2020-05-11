@@ -70,12 +70,39 @@
 	<% var j=0; for (var i=0; i<picksData.length; i++) { j = picksData[i].foodsubtotal; } %>
 	<h4>Subtotal: $<%= j %></h4>
 	<br>
+	<h4>Delivery Fee: $<%= order.deliveryfee%></h4>
+	<br>
+	<% if (promoSuccess != true) { %>
 
 	<form class="form-inline" action="/customer/checkPromo" method="post" role="form">
 		<label for="inputPromoCode">Promo Code</label>
 		<input type="text" class="form-control" id="inputPromoCode" name="inputPromoCode" placeholder="PANDAFOODPROMO">
 		<button type="submit" class="btn btn-primary mb-2">Check Promo Code</button>
 	</form>
+	<br>
+
+	<% } else { %>
+		<h4>Promo Code: <%= order.promocode %> </h4>
+		
+	<% } %>
+	<% if (promoSuccess != null && promoSuccess == true) { %>
+	<div class="alert alert-success" role="alert" id="promoSuccessAlert">
+		Order successfully updated with Promo Code
+	</div>
+	<br>
+	<% } %>
+	<% if (promoSuccess != null && promoSuccess == false) { %>
+	<div class="alert alert-warning" role="alert" id="promoFailAlert">
+		Promo Code entered is invalid
+	</div>
+	<br>
+	<% } %>
+	<br>
+	<h4>Promo Code Discount: $<%= order.promodiscount%></h4>
+	<br>
+
+
+
 	<form id="html_form" action="/customer/placeOrder" role="form" method="post">
 
 		<label for="exampleFormControlSelect1">Delivery Address</label>
