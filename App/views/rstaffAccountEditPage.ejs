@@ -3,7 +3,7 @@
 
 <head>
 	<!-- Page Title -->
-	<title>Rider Home Page</title>
+	<title>Restaurant Staff Home Page</title>
 	<link rel='stylesheet' href='/stylesheets/style.css' />
 
 	<!-- CSS for Styling -->
@@ -23,8 +23,10 @@
 </head>
 
 <body>
-	<h1>PandaFood</h1>
-	<br />
+    <h1>Restaurant Staff Homepage</h1>
+    <br>
+    <h2>Welcome <%=userName%>!</h2>
+    <br>
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
 		<a class="navbar-brand" href="#">Logged in as <%= userName%></a>
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -33,13 +35,13 @@
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 			<div class="navbar-nav">
-				<a class="nav-item nav-link" href="/riderHomePage">Home</a>
-				<a class="nav-item nav-link active" href="/riderHomePage/accounts">Accounts</a>
+				<a class="nav-item nav-link" href="/restaurantStaffHomePage">Home</span></a>
+				<a class="nav-item nav-link active" href="/restaurantStaffHomePage/accounts">Accounts</a>
 			</div>
 		</div>
-	</nav>
+    </nav>
 	<br />
-	<form autocomplete="off" method="POST" action="/riderHomePage/submitAccountDetails">
+	<form autocomplete="off" method="POST" action="/restaurantStaffHomePage/submitAccountDetails">
 		<div class="form-group">
 		  <label for="exampleInputEmail1">Name</label>
 		  <input type="text" class="form-control" name="inputName" autocomplete="off" value="<%= userName%>">
@@ -52,10 +54,6 @@
 		  <label for="exampleInputPassword1">Password</label>
 		  <input type="password" class="form-control" name="inputPassword" autocomplete="new-password" value="-">
 		</div>
-		<div class="form-group">
-			<label for="exampleInputEmail1">Phone Number</label>
-			<input type="text" class="form-control" name="inputPhoneNo" autocomplete="off" value="<%= phoneNo%>">
-		  </div>
 		<button type="submit" class="btn btn-primary">Submit</button>
 	  </form>
 
